@@ -45,7 +45,7 @@ function processJsonLike(asBuf, asString) {
           res[fieldName] = fieldValue.map(fileStats => getFileData(fileStats, jsonPartEnd, asBuf));
           break;
         case IDF.other:
-          res[fieldName] = fieldValue.constructor.name === 'Object' ? _process(fieldValue) : fieldValue;
+          res[fieldName] = fieldValue?.constructor.name === 'Object' ? _process(fieldValue) : fieldValue;
       }
     }
 

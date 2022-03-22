@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { node, shape, number, elementType, object } from 'prop-types';
 import Box from '@mui/material/Box';
 
 
 const STANDARD_RATIO = { w: 16, h: 9 };
 
-function RatioBox({ children, ratio, width, Component, style, innerRef, ...props }) {
+function RatioBoxComponent({ children, ratio, width, Component, style, ...props }, ref) {
   const fullStyle = {
     ...style,
     width: `${width}%`,
@@ -15,7 +15,7 @@ function RatioBox({ children, ratio, width, Component, style, innerRef, ...props
     paddingBottom: `${ratio.h / ratio.w * width}%`
   };
   return (
-    <Component style={fullStyle} ref={innerRef} {...props}>
+    <Component style={fullStyle} ref={ref} {...props}>
       <Box position='absolute' top={0} left={0} bottom={0} right={0}>
         {children}
       </Box>
@@ -23,13 +23,14 @@ function RatioBox({ children, ratio, width, Component, style, innerRef, ...props
   );
 }
 
+const RatioBox = forwardRef(RatioBoxComponent);
+
 RatioBox.propTypes = {
   children: node,
   ratio: shape({ w: number.isRequired, h: number.isRequired }),
   width: number,
   style: object,
   Component: elementType,
-  innerRef: object
 };
 
 RatioBox.defaultProps = {

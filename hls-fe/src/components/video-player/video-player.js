@@ -29,6 +29,20 @@ function VideoPlayer({ src, thumbnail }) {
 
   // > === === DISPLAY === === >
   const [controlsVisible, setControlsVisible] = useState(false);
+  const [playbackMenuOpen, setPlaybackMenuOpen] = useState(false);
+
+  function showControls() {
+    clearTimeout(hideControlsTimeoutRef.current);
+    setControlsVisible(true);
+  }
+
+  function scheduleControlsHide(force) {
+    if (!playbackMenuOpen || force) {
+      hideControlsTimeoutRef.current = setTimeout(
+        () => setControlsVisible(false), HIDE_CONTROLS_DELAY
+      );
+    }
+  }
   // < === === DISPLAY === === <
 
   // > === === VIDEO STATISTICS === === >
@@ -52,7 +66,10 @@ function VideoPlayer({ src, thumbnail }) {
   }
 
   const currentTimeData = useCurrentTime(videoRef);
-  const pausedData = usePaused(videoRef);
+  const pausedData = usePaused(videoRef, () => {
+    showControls();
+    scheduleControlsHide();
+  });
   const volumeData = useVolume(videoRef);
   const mutedData = useMuted(videoRef);
   const playbackRateData = usePlaybackRate(videoRef);
@@ -111,14 +128,12 @@ function VideoPlayer({ src, thumbnail }) {
   // > === === RENDERING === === >
   return (
     <RatioBox
-      innerRef={videoContainerRef}
+      ref={videoContainerRef}
       onMouseMove={() => {
-        clearTimeout(hideControlsTimeoutRef.current);
-        setControlsVisible(true);
-        hideControlsTimeoutRef.current = setTimeout(
-          () => setControlsVisible(false), HIDE_CONTROLS_DELAY
-        );
+        showControls();
+        scheduleControlsHide();
       }}
+      sx={{ overflow: 'hidden' }}
     >
       {
         isProcessing &&
@@ -141,13 +156,14 @@ function VideoPlayer({ src, thumbnail }) {
         height='auto'
         ref={videoRef}
         autoPlay={false}
+        onClick={() => pausedData.set(curr => !curr)}
       />
       {
         !!videoRef.current &&
         <Slide
           direction='up'
           container={videoContainerRef.current}
-          in={controlsVisible}
+          in={controlsVisible || pausedData.val}
         >
           <Controls
             currentTimeData={currentTimeData}
@@ -161,6 +177,12 @@ function VideoPlayer({ src, thumbnail }) {
 
             totalDuration={totalDuration}
             loadedTimeRanges={loadedTimeRanges}
+
+            showControls={showControls}
+            scheduleControlsHide={scheduleControlsHide}
+
+            playbackMenuOpen={playbackMenuOpen}
+            setPlaybackMenuOpen={setPlaybackMenuOpen}
           />
         </Slide>
       }

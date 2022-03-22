@@ -84,9 +84,10 @@ function useCurrentTime(videoRef, updRate = 250) {
 /**
  *
  * @param {VideoRef} videoRef
+ * @param {function} resetControlsVisibility
  * @return {{ val: boolean, set: function }}
  */
-function usePaused(videoRef) {
+function usePaused(videoRef, resetControlsVisibility) {
   const [paused, setPaused] = useState(false);
   const [canUpdate, setCanUpdate] = useState(true);
   const enqueued = useRef(null);
@@ -98,6 +99,7 @@ function usePaused(videoRef) {
   });
 
   function change(shouldBePaused) {
+    resetControlsVisibility();
     const video = videoRef.current;
     if (shouldBePaused && !video.paused) {
       video.pause()

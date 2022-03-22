@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { func, bool } from 'prop-types';
 import IconButton from '@mui/material/IconButton';
 import { startCase } from 'lodash';
 import { Check, ChevronLeft, ChevronRight, DisplaySettings, Settings, SlowMotionVideo } from '@mui/icons-material';
@@ -27,8 +28,7 @@ const SECTIONS = [
   }
 ];
 
-function Playback(props) {
-  const [isOpen, setIsOpen] = useState(false);
+function Playback({ open, setOpen, scheduleControlsHide, ...props }) {
   const [currentSectionName, setCurrentSectionName] = useState(MAIN);
 
   const buttonRef = useRef(null);
@@ -58,26 +58,49 @@ function Playback(props) {
     }))
   ];
 
+  function closeMenu() {
+    setOpen(false);
+    setCurrentSectionName(MAIN);
+    scheduleControlsHide(true);
+  }
+
+  useEffect(() => {
+    const listener = e => {
+      if (
+        menuContainerRef.current && !menuContainerRef.current.contains(e.target) &&
+        buttonRef.current && !buttonRef.current.contains(e.target)
+      ) {
+        closeMenu();
+      }
+    };
+
+    if (open) {
+      document.addEventListener('click', listener);
+    }
+
+    return () => {
+      document.removeEventListener('click', listener);
+    };
+  }, [open]);
+
   return (
     <>
       <Menu
-        open={isOpen}
-        onClose={() => {
-          setIsOpen(false);
-          setCurrentSectionName(MAIN);
-        }}
+        open={open}
+        onClose={closeMenu}
         anchorEl={buttonRef.current}
         anchorOrigin={{
           vertical: 'top',
           horizontal: 'right'
         }}
-        sx={{ mb: 1 }}
+        sx={{ mb: 1, pointerEvents: 'none' }}
         transformOrigin={{
           vertical: 'bottom',
           horizontal: 'right'
         }}
         MenuListProps={{
-          ref: menuContainerRef
+          ref: menuContainerRef,
+          sx: { pointerEvents: 'all' }
         }}
       >
         {
@@ -125,7 +148,7 @@ function Playback(props) {
       <IconButton
         color='primary'
         ref={buttonRef}
-        onClick={() => setIsOpen(true)}
+        onClick={() => setOpen(curr => !curr)}
       >
         <Settings />
       </IconButton>
@@ -135,7 +158,10 @@ function Playback(props) {
 
 Playback.propTypes = {
   playbackRate: VIDEO_DATA_SHAPE.isRequired,
-  quality: VIDEO_DATA_SHAPE.isRequired
+  quality: VIDEO_DATA_SHAPE.isRequired,
+  setOpen: func.isRequired,
+  open: bool.isRequired,
+  scheduleControlsHide: func.isRequired
 };
 
 export default Playback;

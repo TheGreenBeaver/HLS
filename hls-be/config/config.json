@@ -1,0 +1,14 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "password",
+    "database": "obs_dev",
+    "host": "127.0.0.1",
+    "dialect": "postgres",
+    "define": {
+      "underscored": true,
+      "timestamps": true,
+      "logging": false
+    }
+  }
+}

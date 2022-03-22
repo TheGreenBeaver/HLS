@@ -1,0 +1,1 @@
+To use this app, you'll first need to [download ffmpeg](https://ffmpeg.org/download.html) on your computer

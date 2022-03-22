@@ -1,0 +1,26 @@
+{
+  "name": "hls-be",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "start:dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "http-status": "^1.5.0",
+    "lodash": "^4.17.21",
+    "pg": "^8.7.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.17.0",
+    "sequelize-cli": "^6.4.1",
+    "ws": "^8.5.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0",
+    "finalhandler": "^1.1.2",
+    "nodemon": "^2.0.15",
+    "serve-static": "^1.14.2"
+  }
+}

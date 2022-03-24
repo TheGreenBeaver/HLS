@@ -13,7 +13,7 @@ import {
   useVolume
 } from './hooks';
 import Box from '@mui/material/Box';
-import { AUTO_LEVEL } from './util';
+import { AUTO_LEVEL, VIDEO_CONTROLS_ID } from './util';
 import Slide from '@mui/material/Slide';
 
 
@@ -43,6 +43,13 @@ function VideoPlayer({ src, thumbnail }) {
       );
     }
   }
+
+  function excludeControls(e, fn) {
+    // Doing this via id because ref is used by Slide
+    if (!document.getElementById(VIDEO_CONTROLS_ID)?.contains(e.target)) {
+      fn(e);
+    }
+  }
   // < === === DISPLAY === === <
 
   // > === === VIDEO STATISTICS === === >
@@ -53,6 +60,7 @@ function VideoPlayer({ src, thumbnail }) {
 
   // > === === VIDEO DATA === === >
   const [availableLevels, setAvailableLevels] = useState([]);
+  const [isAutoLevel, setIsAutoLevel] = useState(true);
   const [currentLevel, setCurrentLevel] = useState(AUTO_LEVEL);
 
   function changeLevel(upd) {
@@ -74,7 +82,9 @@ function VideoPlayer({ src, thumbnail }) {
   const mutedData = useMuted(videoRef);
   const playbackRateData = usePlaybackRate(videoRef);
   const qualityData = {
-    val: availableLevels[currentLevel] || AUTO_LEVEL,
+    val: availableLevels[currentLevel] ? {
+      ...availableLevels[currentLevel], isAutoLevel
+    } : AUTO_LEVEL,
     set: changeLevel,
     available: availableLevels
   };
@@ -99,9 +109,10 @@ function VideoPlayer({ src, thumbnail }) {
           setIsProcessing(false);
         });
 
-        hls.on(Hls.Events.LEVEL_SWITCHED, (_, { level }) =>
-          setCurrentLevel(level)
-        );
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_, { level }) => {
+          setIsAutoLevel(hlsRef.current?.autoLevelEnabled);
+          setCurrentLevel(level);
+        });
 
         hls.on(Hls.Events.BUFFER_FLUSHED, () =>
           setLoadedTimeRanges(null)
@@ -129,10 +140,6 @@ function VideoPlayer({ src, thumbnail }) {
   return (
     <RatioBox
       ref={videoContainerRef}
-      onMouseMove={() => {
-        showControls();
-        scheduleControlsHide();
-      }}
       sx={{ overflow: 'hidden' }}
     >
       {
@@ -156,7 +163,11 @@ function VideoPlayer({ src, thumbnail }) {
         height='auto'
         ref={videoRef}
         autoPlay={false}
-        onClick={() => pausedData.set(curr => !curr)}
+        onMouseMove={e => excludeControls(e, () => {
+          showControls();
+          scheduleControlsHide();
+        })}
+        onClick={e => excludeControls(e, () => pausedData.set(curr => !curr))}
       />
       {
         !!videoRef.current &&

@@ -1,14 +1,14 @@
 import React, { forwardRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import ProgressBar from './progress-bar';
-import { VIDEO_DATA_SHAPE } from '../util';
+import { VIDEO_CONTROLS_ID, VIDEO_DATA_SHAPE } from '../util';
 import PlayButton from './play-button';
 import Volume from './volume';
 import Playback from './playback';
 import FullScreen from './full-screen';
 import { instanceOf, number, object, shape, func } from 'prop-types';
 import Typography from '@mui/material/Typography';
-import { padStart } from 'lodash';
+import { getTimeDisplay } from '../../../util/misc';
 
 
 function ControlsComponent({
@@ -18,21 +18,13 @@ function ControlsComponent({
   showControls, scheduleControlsHide,
   playbackMenuOpen, setPlaybackMenuOpen
 }, ref) {
-  function getTimeDisplay(valInSeconds) {
-    if (totalDuration == null) {
-      return '--';
-    }
-
-    const roundedVal = Math.floor(valInSeconds);
-    const sec = roundedVal % 60;
-    const min = Math.floor(roundedVal / 60) % 60;
-    const h = Math.floor(roundedVal / 60 / 60);
-
-    return `${h ? `${h}:` : ''}${min}:${padStart(`${sec}`, 2, '0')}`
+  function getCleanTimeDisplay(valInSeconds) {
+    return totalDuration == null ? '--' : getTimeDisplay(valInSeconds);
   }
 
   return (
     <Box
+      id={VIDEO_CONTROLS_ID}
       ref={ref}
       position='absolute'
       left={0}
@@ -41,11 +33,14 @@ function ControlsComponent({
       px={2}
       py={1}
       zIndex={10}
-      sx={{ background: 'linear-gradient(transparent, rgba(0, 0, 0, .7))' }}
+      sx={{
+        background: 'linear-gradient(transparent, rgba(0, 0, 0, .7))',
+        '& .MuiSvgIcon-fontSizeLarge': {
+          fontSize: '1.8rem'
+        }
+      }}
       onMouseOver={showControls}
-      onMouseLeave={scheduleControlsHide}
-      onClick={e => e.stopPropagation()}
-      onMouseMove={e => e.stopPropagation()}
+      onMouseLeave={() => scheduleControlsHide()}
     >
       <ProgressBar
         currentTimeData={currentTimeData}
@@ -57,7 +52,7 @@ function ControlsComponent({
           <PlayButton pausedData={pausedData} />
           <Volume volumeData={volumeData} mutedData={mutedData} />
           <Typography variant='caption' sx={{ color: 'white' }}>
-            {getTimeDisplay(currentTimeData.val)} / {getTimeDisplay(totalDuration)}
+            {getCleanTimeDisplay(currentTimeData.val)} / {getCleanTimeDisplay(totalDuration)}
           </Typography>
         </Box>
 

@@ -6,5 +6,6 @@ const VIDEO_DATA_SHAPE = shape({
   available: array
 });
 const AUTO_LEVEL = -1;
+const VIDEO_CONTROLS_ID = 'obs-video-controls-box';
 
-export { VIDEO_DATA_SHAPE, AUTO_LEVEL};
+export { VIDEO_DATA_SHAPE, AUTO_LEVEL, VIDEO_CONTROLS_ID };

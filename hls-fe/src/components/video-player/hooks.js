@@ -75,7 +75,7 @@ function useNumeric(
  * @param {number} [updRate = 250]
  * @return {{ val: number, set: function }}
  */
-function useCurrentTime(videoRef, updRate = 250) {
+function useCurrentTime(videoRef, updRate = 200) {
   return useNumeric(
     videoRef, 'currentTime', 'timeupdate', 0, updRate
   );

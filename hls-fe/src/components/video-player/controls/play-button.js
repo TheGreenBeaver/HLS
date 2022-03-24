@@ -11,7 +11,7 @@ function PlayButton({ pausedData }) {
       color='primary'
       onClick={() => setIsPaused(curr => !curr)}
     >
-      {isPaused ? <PlayArrow /> : <Pause />}
+      {isPaused ? <PlayArrow fontSize='large' /> : <Pause fontSize='large' />}
     </IconButton>
   );
 }

@@ -3,7 +3,7 @@ import { func, bool } from 'prop-types';
 import IconButton from '@mui/material/IconButton';
 import { startCase } from 'lodash';
 import { Check, ChevronLeft, ChevronRight, DisplaySettings, Settings, SlowMotionVideo } from '@mui/icons-material';
-import Menu from '@mui/material/Menu';
+import Popover from '@mui/material/Popover';
 import Slide from '@mui/material/Slide';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
@@ -12,6 +12,8 @@ import ListItemText from '@mui/material/ListItemText';
 import { AUTO_LEVEL, VIDEO_DATA_SHAPE } from '../util';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import MenuList from '@mui/material/MenuList';
+import Paper from '@mui/material/Paper';
 
 
 const MAIN = 'main';
@@ -19,14 +21,48 @@ const SECTIONS = [
   {
     icon: <SlowMotionVideo />,
     name: 'playbackRate',
-    getTitle: option => option === 1 ? 'Normal' : `x${option}`
+    getTitle: option => option === 1 ? 'Normal' : `x${option}`,
+    isSelected: (val, option) => val === option
   },
   {
     icon: <DisplaySettings />,
     name: 'quality',
-    getTitle: (option) => option === AUTO_LEVEL ? 'Auto' : `${option.height}p`
+    getTitle: (option) => {
+      if (option === AUTO_LEVEL) {
+        return 'Auto';
+      }
+
+      if (option.isAutoLevel) {
+        return  `Auto ${option.height}p`
+      }
+
+      return `${option.height}p`;
+    },
+    isSelected: (val, option) => option === AUTO_LEVEL
+      ? val.isAutoLevel
+      : val.height === option.height && !val.isAutoLevel
   }
 ];
+const MENU_WIDTH = 250;
+const MENU_MAX_HEIGHT = 380;
+const HR_SIZE = 0.000003;
+
+function getSectionHeight(theme, section) {
+  const withHeader = section.name !== MAIN;
+  const itemsAmt = section.items.length;
+
+  const gutters = theme.spacing(2);
+  const { lineHeight } = theme.typography.body1;
+  const itemHeight = `${theme.spacing(0.75 * 2)} + ${lineHeight}rem`;
+
+  let headerHeight = '';
+  if (withHeader) {
+    headerHeight = ` + ${HR_SIZE}px + ${gutters} + ${itemHeight}`;
+  }
+
+  return `calc(${gutters}${headerHeight} + (${itemHeight}) * ${itemsAmt})`;
+}
+
 
 function Playback({ open, setOpen, scheduleControlsHide, ...props }) {
   const [currentSectionName, setCurrentSectionName] = useState(MAIN);
@@ -48,21 +84,22 @@ function Playback({ open, setOpen, scheduleControlsHide, ...props }) {
           </Box>
       }))
     },
-    ...SECTIONS.map(({ name, getTitle }) => ({
+    ...SECTIONS.map(({ name, getTitle, isSelected }) => ({
       name,
       items: props[name].available.map(option => ({
         title: getTitle(option),
         onClick: () => props[name].set(option),
-        icon: props[name].val === option && <Check />
+        icon: isSelected(props[name].val, option) && <Check />
       }))
     }))
   ];
 
-  function closeMenu() {
-    setOpen(false);
-    setCurrentSectionName(MAIN);
-    scheduleControlsHide(true);
-  }
+  useEffect(() => {
+    if (!open) {
+      setCurrentSectionName(MAIN);
+      scheduleControlsHide(true);
+    }
+  }, [open]);
 
   useEffect(() => {
     const listener = e => {
@@ -70,7 +107,7 @@ function Playback({ open, setOpen, scheduleControlsHide, ...props }) {
         menuContainerRef.current && !menuContainerRef.current.contains(e.target) &&
         buttonRef.current && !buttonRef.current.contains(e.target)
       ) {
-        closeMenu();
+        setOpen(false);
       }
     };
 
@@ -83,74 +120,100 @@ function Playback({ open, setOpen, scheduleControlsHide, ...props }) {
     };
   }, [open]);
 
+  function getSectionContent(section) {
+    const itemsList = section.items.map(item =>
+      <MenuItem onClick={item.onClick} key={item.title}>
+        <ListItemIcon>
+          {item.icon}
+        </ListItemIcon>
+        <ListItemText>
+          {item.title}
+        </ListItemText>
+        {item.extra}
+      </MenuItem>
+    );
+    if (section.name !== MAIN) {
+      itemsList.unshift(
+        <MenuItem onClick={() => setCurrentSectionName(MAIN)} key='back'>
+          <ListItemIcon>
+            <ChevronLeft />
+          </ListItemIcon>
+          <ListItemText>
+            {startCase(section.name)}
+          </ListItemText>
+        </MenuItem>,
+        <Divider key='divider' />
+      );
+    }
+
+    return itemsList;
+  }
+
+  const currentSection = sections.find(s => s.name === currentSectionName);
+
   return (
     <>
-      <Menu
+      <Popover
+        disablePortal
         open={open}
-        onClose={closeMenu}
+        onClose={() => setOpen(false)}
         anchorEl={buttonRef.current}
+        disableScrollLock
         anchorOrigin={{
           vertical: 'top',
           horizontal: 'right'
         }}
-        sx={{ mb: 1, pointerEvents: 'none' }}
+        sx={{ pointerEvents: 'none' }}
         transformOrigin={{
           vertical: 'bottom',
           horizontal: 'right'
         }}
-        MenuListProps={{
-          ref: menuContainerRef,
-          sx: { pointerEvents: 'all' }
+        PaperProps={{
+          sx: {
+            height: MENU_MAX_HEIGHT,
+            width: MENU_WIDTH,
+            background: 'transparent'
+          },
         }}
       >
-        {
-          sections.map(section =>
-            <Slide
-              key={section.name}
-              container={menuContainerRef.current}
-              direction='left'
-              in={currentSectionName === section.name}
-            >
-              <Box display={currentSectionName === section.name ? null : 'none'} width={250}>
-                {
-                  section.name !== MAIN &&
-                  <>
-                    <MenuItem onClick={() => setCurrentSectionName(MAIN)}>
-                      <ListItemIcon>
-                        <ChevronLeft />
-                      </ListItemIcon>
-                      <ListItemText>
-                        {startCase(section.name)}
-                      </ListItemText>
-                    </MenuItem>
-                    <Divider />
-                  </>
-                }
-                {
-                  section.items.map(item =>
-                    <MenuItem onClick={item.onClick} key={item.title}>
-                      <ListItemIcon>
-                        {item.icon}
-                      </ListItemIcon>
-                      <ListItemText>
-                        {item.title}
-                      </ListItemText>
-                      {item.extra}
-                    </MenuItem>
-                  )
-                }
-              </Box>
-            </Slide>
-          )
-        }
-      </Menu>
+        <Paper
+          ref={menuContainerRef}
+          sx={{
+            position: 'absolute',
+            width: MENU_WIDTH,
+            left: 0,
+            bottom: 0,
+            height: theme => getSectionHeight(theme, currentSection),
+            transition: theme => theme.transitions.create('height'),
+            overflow: 'hidden'
+          }}
+        >
+          {
+            sections.map(section =>
+              <Slide
+                appear={false}
+                key={section.name}
+                container={menuContainerRef.current}
+                direction={section.name === MAIN ? 'right' : 'left'}
+                in={currentSectionName === section.name}
+              >
+                <MenuList
+                  sx={{ pointerEvents: 'all', position: 'absolute', left: 0, width: MENU_WIDTH }}
+                >
+                  {getSectionContent(section)}
+                </MenuList>
+              </Slide>
+            )
+          }
+        </Paper>
+      </Popover>
 
       <IconButton
         color='primary'
         ref={buttonRef}
         onClick={() => setOpen(curr => !curr)}
       >
-        <Settings />
+        <Settings fontSize='large' />
       </IconButton>
     </>
   );

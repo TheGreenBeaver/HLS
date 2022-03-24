@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import * as _ from 'lodash';
 
 
@@ -19,4 +19,10 @@ function useDelayedFn(fn, updRate, delayer, leading = true) {
   };
 }
 
-export { useDelayedFn };
+const TRIGGER = 'trigger';
+function useTrigger() {
+  const [trigger, setTrigger] = useState(Symbol(TRIGGER));
+  return [trigger, () => setTrigger(Symbol(TRIGGER))];
+}
+
+export { useDelayedFn, useTrigger };

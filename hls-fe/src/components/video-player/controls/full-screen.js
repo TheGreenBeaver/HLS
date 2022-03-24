@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { object, shape } from 'prop-types';
 import IconButton from '@mui/material/IconButton';
-import { Fullscreen } from '@mui/icons-material';
+import { Fullscreen, FullscreenExit } from '@mui/icons-material';
 
 
 function FullScreen({ containerRef }) {
+  const [isFullScreen, setIsFullScreen] = useState(false);
   return (
-    <IconButton>
-      <Fullscreen />
+    <IconButton
+      color='primary'
+      onClick={() =>
+        isFullScreen
+          ? document.exitFullscreen().then(() => setIsFullScreen(false))
+          : containerRef.current?.requestFullscreen().then(() => setIsFullScreen(true))
+      }
+    >
+      {isFullScreen ? <FullscreenExit fontSize='large' /> : <Fullscreen fontSize='large' />}
     </IconButton>
   );
 }

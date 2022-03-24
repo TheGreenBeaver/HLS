@@ -19,7 +19,7 @@ function Volume({ volumeData, mutedData }) {
         onClick={() => setIsMuted(curr => !curr)}
         onMouseEnter={() => setIsSliderVisible(true)}
       >
-        {isMuted || currentVolume === 0 ? <VolumeOff /> : <VolumeUp />}
+        {isMuted || currentVolume === 0 ? <VolumeOff fontSize='large' /> : <VolumeUp fontSize='large' />}
       </IconButton>
       <Collapse in={isSliderVisible} collapsedSize={0} orientation='horizontal'>
         <Box minWidth={80} pl={1} pr={2} display='flex' alignItems='center'>

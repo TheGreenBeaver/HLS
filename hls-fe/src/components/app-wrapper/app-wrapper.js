@@ -1,22 +1,24 @@
 import React from 'react';
-import { bool, node } from 'prop-types';
+import { node } from 'prop-types';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Modals from '../modals';
 import Header from '../header';
+import { useIsReady } from '../../store/selectors';
 
 
-function AppWrapper({ children, isInteractive }) {
+function AppWrapper({ children }) {
+  const isReady = useIsReady();
   return (
-    <Container component='main' maxWidth={isInteractive ? 'lg' : 'xs'}>
+    <Container component='main' maxWidth={isReady ? 'lg' : 'xs'}>
       {
-        isInteractive && <>
+        isReady && <>
           <Header />
           <Modals />
         </>
       }
       <Box
-        sx={isInteractive ? {
+        sx={isReady ? {
           mt: 2
         } : {
           mt: 8,
@@ -32,8 +34,7 @@ function AppWrapper({ children, isInteractive }) {
 }
 
 AppWrapper.propTypes = {
-  children: node,
-  isInteractive: bool.isRequired
+  children: node
 };
 
 export default AppWrapper;

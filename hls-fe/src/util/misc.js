@@ -18,6 +18,10 @@ function getTimeDisplay(valInSeconds) {
   return `${h ? `${h}:` : ''}${min}:${padStart(`${sec}`, 2, '0')}`
 }
 
+function getUpd(upd, curr) {
+  return typeof upd === 'function' ? upd(curr) : upd;
+}
+
 export {
-  toBuf, toStr, getTimeDisplay
+  toBuf, toStr, getTimeDisplay, getUpd
 };

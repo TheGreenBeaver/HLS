@@ -1,9 +1,9 @@
 import { Route, Switch, Redirect } from 'react-router-dom';
-import { shape, bool } from 'prop-types';
 import { omit } from 'lodash';
 import { links as authLinks, routes as authRoutes } from './auth/routing';
 import { links as videosLinks, routes as videosRoutes } from './videos/routing';
 import Loading from '../components/loading';
+import { useUserState } from '../store/selectors';
 
 
 const links = {
@@ -28,8 +28,10 @@ function getDefaultRoute({ isAuthorized, isVerified }) {
   return links.auth.notVerified.path;
 }
 
-function Routing({ userState }) {
-  if (userState.isAuthorized && !userState.isFetched) {
+function Routing() {
+  const userState = useUserState();
+
+  if (!userState.isReady) {
     return <Loading />;
   }
 
@@ -49,14 +51,6 @@ function Routing({ userState }) {
     </Switch>
   );
 }
-
-Routing.propTypes = {
-  userState: shape({
-    isAuthorized: bool.isRequired,
-    isVerified: bool.isRequired,
-    isFetched: bool.isRequired
-  }).isRequired
-};
 
 export { links, getDefaultRoute };
 export default Routing;

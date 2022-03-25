@@ -1,19 +1,15 @@
-import React, { useState } from 'react';
-import { object, shape } from 'prop-types';
+import React from 'react';
+import { shape, func, bool } from 'prop-types';
 import IconButton from '@mui/material/IconButton';
 import { Fullscreen, FullscreenExit } from '@mui/icons-material';
 
 
-function FullScreenButton({ containerRef }) {
-  const [isFullScreen, setIsFullScreen] = useState(false);
+function FullScreenButton({ fullScreenData: { isFullScreen, isProcessing, toggle } }) {
   return (
     <IconButton
       color='primary'
-      onClick={() =>
-        isFullScreen
-          ? document.exitFullscreen().then(() => setIsFullScreen(false))
-          : containerRef.current?.requestFullscreen().then(() => setIsFullScreen(true))
-      }
+      onClick={toggle}
+      disabled={isProcessing}
     >
       {isFullScreen ? <FullscreenExit fontSize='large' /> : <Fullscreen fontSize='large' />}
     </IconButton>
@@ -21,7 +17,11 @@ function FullScreenButton({ containerRef }) {
 }
 
 FullScreenButton.propTypes = {
-  containerRef: shape({ current: object }).isRequired
+  fullScreenData: shape({
+    toggle: func.isRequired,
+    isProcessing: bool.isRequired,
+    isFullScreen: bool.isRequired
+  }).isRequired,
 };
 
 export default FullScreenButton;

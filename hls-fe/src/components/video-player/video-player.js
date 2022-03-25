@@ -5,7 +5,7 @@ import RatioBox from '../layout/ratio-box';
 import Controls from './controls';
 import {
   useControls,
-  useCurrentTime,
+  useCurrentTime, useFullScreen,
   useMuted,
   usePaused,
   usePlaybackRate, useQuality,
@@ -52,6 +52,7 @@ function VideoPlayer({ src, thumbnail }) {
   const mutedData = useMuted(videoRef);
   const playbackRateData = usePlaybackRate(videoRef);
   const { qualityData, qualitySetters } = useQuality(videoRef, hlsRef);
+  const fullScreenData = useFullScreen(videoContainerRef);
   // < === === VIDEO DATA === === <
 
   // > === === HLS INITIALIZATION + CLEANUP === === >
@@ -154,6 +155,7 @@ function VideoPlayer({ src, thumbnail }) {
         autoPlay={false}
         onMouseMove={e => excludeControls(e, resetControls)}
         onClick={e => excludeControls(e, () => pausedData.set(curr => !curr))}
+        onDoubleClick={e => excludeControls(e, fullScreenData.toggle)}
       />
       {
         !!videoRef.current &&
@@ -169,8 +171,7 @@ function VideoPlayer({ src, thumbnail }) {
             mutedData={mutedData}
             playbackRateData={playbackRateData}
             qualityData={qualityData}
-
-            containerRef={videoContainerRef}
+            fullScreenData={fullScreenData}
 
             totalDuration={totalDuration}
             loadedTimeRanges={loadedTimeRanges}

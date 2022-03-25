@@ -2,11 +2,22 @@ import { useSelector } from 'react-redux';
 
 function useUserState() {
   const { userData, isAuthorized } = useSelector(state => state.account);
+  const isFetched = !!userData;
   return {
     isAuthorized,
-    isFetched: !!userData,
-    isVerified: !!userData?.isVerified
+    isFetched,
+    isVerified: !!userData?.isVerified,
+    isReady: isAuthorized && isFetched
   };
+}
+
+function useIsReady() {
+  const { userData, isAuthorized } = useSelector(state => state.account);
+  return isAuthorized && !!userData;
+}
+
+function useIsAuthorized() {
+  return useSelector(state => state.account.isAuthorized);
 }
 
 function useUserData() {
@@ -22,5 +33,5 @@ function useProfileModalOpen() {
 }
 
 export {
-  useUserState, useErr, useUserData, useProfileModalOpen
+  useUserState, useErr, useUserData, useProfileModalOpen, useIsAuthorized, useIsReady
 };

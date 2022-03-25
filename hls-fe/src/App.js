@@ -2,7 +2,7 @@ import Routing from './pages/routing';
 import { useWsAction, useWsCleanup, useWsRequest } from './ws/hooks';
 import ACTIONS from './ws/actions';
 import { getCredentials } from './util/auth';
-import { useErr, useUserState } from './store/selectors';
+import { useErr, useIsAuthorized } from './store/selectors';
 import { useDispatch } from 'react-redux';
 import { logOut, updateUserData } from './store/actions/account';
 import { useEffect } from 'react';
@@ -15,7 +15,7 @@ import { useSnackbar } from 'notistack';
 
 function App() {
   const dispatch = useDispatch();
-  const userState = useUserState();
+  const isAuthorized = useIsAuthorized();
   const err = useErr();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -49,8 +49,8 @@ function App() {
   useWsRequest(
     ACTIONS.me,
     { token: getCredentials() },
-    userState.isAuthorized,
-    [userState.isAuthorized],
+    isAuthorized,
+    [isAuthorized],
     payload => dispatch(updateUserData(payload)),
     () => dispatch(logOut())
   );
@@ -60,8 +60,8 @@ function App() {
   }
 
   return (
-    <AppWrapper isInteractive={userState.isAuthorized && userState.isFetched}>
-      <Routing userState={userState} />
+    <AppWrapper>
+      <Routing />
     </AppWrapper>
   );
 }

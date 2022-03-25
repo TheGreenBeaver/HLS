@@ -6,14 +6,13 @@ import PlayButton from './play-button';
 import Volume from './volume';
 import PlaybackSettings from './playback-settings';
 import FullScreenButton from './full-screen-button';
-import { instanceOf, number, object, shape, func } from 'prop-types';
+import { instanceOf, number, shape, func, bool } from 'prop-types';
 import Typography from '@mui/material/Typography';
 import { getTimeDisplay } from '../../../util/misc';
 
 
 function ControlsComponent({
-  pausedData, mutedData, currentTimeData, playbackRateData, qualityData, volumeData,
-  containerRef,
+  pausedData, mutedData, currentTimeData, playbackRateData, qualityData, volumeData, fullScreenData,
   loadedTimeRanges, totalDuration,
   showControls, scheduleControlsHide,
   playbackMenuOpen, setPlaybackMenuOpen
@@ -64,7 +63,7 @@ function ControlsComponent({
             setOpen={setPlaybackMenuOpen}
             scheduleControlsHide={scheduleControlsHide}
           />
-          <FullScreenButton containerRef={containerRef} />
+          <FullScreenButton fullScreenData={fullScreenData} />
         </Box>
       </Box>
     </Box>
@@ -79,8 +78,11 @@ Controls.propTypes = {
   mutedData: VIDEO_DATA_SHAPE.isRequired,
   playbackRateData: VIDEO_DATA_SHAPE.isRequired,
   qualityData: VIDEO_DATA_SHAPE.isRequired,
-
-  containerRef: shape({ current: object }).isRequired,
+  fullScreenData: shape({
+    toggle: func.isRequired,
+    isProcessing: bool.isRequired,
+    isFullScreen: bool.isRequired
+  }).isRequired,
 
   loadedTimeRanges: instanceOf(TimeRanges),
   totalDuration: number,

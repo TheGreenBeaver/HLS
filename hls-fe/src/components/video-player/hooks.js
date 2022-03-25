@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDelayedFn } from '../../util/hooks';
 import { AUTO_LEVEL, VIDEO_CONTROLS_ID } from './util';
+import { getUpd } from '../../util/misc';
 
 /**
  * @typedef VideoRef
@@ -64,7 +65,7 @@ function useNumeric(
 
   function set(upd) {
     const video = videoRef.current;
-    video[fieldName] = typeof upd === 'function' ? upd(video[fieldName]) : upd;
+    video[fieldName] = getUpd(upd, video[fieldName]);
   }
 
   return { val, set };
@@ -127,9 +128,7 @@ function usePaused(videoRef, onChange) {
 
   function set(upd) {
     const video = videoRef.current;
-    const shouldBePaused = typeof upd === 'function'
-      ? upd(video.paused)
-      : upd;
+    const shouldBePaused = getUpd(upd, video.paused);
 
     if (!canUpdate) {
       enqueued.current = shouldBePaused;
@@ -167,7 +166,7 @@ function useMuted(videoRef) {
 
   function set(upd) {
     const video = videoRef.current;
-    const shouldBeMuted = typeof upd === 'function' ? upd(video.muted) : upd;
+    const shouldBeMuted = getUpd(upd, video.muted);
     video.muted = shouldBeMuted;
     setMuted(shouldBeMuted);
   }
@@ -193,7 +192,7 @@ function usePlaybackRate(videoRef) {
 
   function set(upd) {
     const video = videoRef.current;
-    video.playbackRate = typeof upd === 'function' ? upd(video.playbackRate) : upd;
+    video.playbackRate = getUpd(upd, video.playbackRate);
   }
   return { val: playbackRate, set, available: AVAILABLE_PLAYBACK_RATES };
 }
@@ -248,6 +247,33 @@ function useQuality(videoRef, hlsRef) {
 
 /**
  *
+ * @param {{ current: HTMLElement }} containerRef
+ * @return {{ isProcessing: boolean, toggle: function(): Promise<void>, isFullScreen: boolean }}
+ */
+function useFullScreen(containerRef) {
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  async function toggle() {
+    if (isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
+    if (isFullScreen) {
+      await document.exitFullscreen();
+    } else {
+      await containerRef.current?.requestFullscreen();
+    }
+    setIsFullScreen(curr => !curr);
+    setIsProcessing(false);
+  }
+
+  return { toggle, isProcessing, isFullScreen };
+}
+
+/**
+ *
  * @param {VideoRef} videoRef
  */
 function useTotalDuration(videoRef) {
@@ -294,7 +320,7 @@ function useControls(playbackMenuOpen) {
   function excludeControls(e, fn) {
     // Doing this via id because ref is used by Slide
     if (!document.getElementById(VIDEO_CONTROLS_ID)?.contains(e.target)) {
-      fn(e);
+      return fn(e);
     }
   }
 
@@ -314,6 +340,7 @@ export {
   useVolume, useMuted,
   usePlaybackRate,
   useQuality,
+  useFullScreen,
 
   useTotalDuration,
 

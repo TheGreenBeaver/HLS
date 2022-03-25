@@ -4,90 +4,54 @@ import Hls from 'hls.js';
 import RatioBox from '../layout/ratio-box';
 import Controls from './controls';
 import {
+  useControls,
   useCurrentTime,
   useMuted,
   usePaused,
-  usePlaybackRate,
+  usePlaybackRate, useQuality,
   useTotalDuration,
   useVideoEffect,
   useVolume
 } from './hooks';
 import Box from '@mui/material/Box';
-import { AUTO_LEVEL, VIDEO_CONTROLS_ID } from './util';
+import { AUTO_LEVEL, calcSeekedTime } from './util';
 import Slide from '@mui/material/Slide';
+import Ripple from './ripple';
 
-
-const HIDE_CONTROLS_DELAY = 2000;
 
 function VideoPlayer({ src, thumbnail }) {
   // > === === REFS === === >
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const videoContainerRef = useRef(null);
-  const hideControlsTimeoutRef = useRef(null);
   // < === === REFS === === <
 
   // > === === DISPLAY === === >
-  const [controlsVisible, setControlsVisible] = useState(false);
   const [playbackMenuOpen, setPlaybackMenuOpen] = useState(false);
-
-  function showControls() {
-    clearTimeout(hideControlsTimeoutRef.current);
-    setControlsVisible(true);
-  }
-
-  function scheduleControlsHide(force) {
-    if (!playbackMenuOpen || force) {
-      hideControlsTimeoutRef.current = setTimeout(
-        () => setControlsVisible(false), HIDE_CONTROLS_DELAY
-      );
-    }
-  }
-
-  function excludeControls(e, fn) {
-    // Doing this via id because ref is used by Slide
-    if (!document.getElementById(VIDEO_CONTROLS_ID)?.contains(e.target)) {
-      fn(e);
-    }
-  }
+  const [rippleState, setRippleState] = useState(Ripple.STATE.none);
+  const {
+    scheduleControlsHide,
+    controlsVisible,
+    excludeControls,
+    showControls,
+    resetControls
+  } = useControls(playbackMenuOpen);
   // < === === DISPLAY === === <
 
-  // > === === VIDEO STATISTICS === === >
-  const totalDuration = useTotalDuration(videoRef);
+  // > === === VIDEO DATA === === >
   const [loadedTimeRanges, setLoadedTimeRanges] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
-  // < === === VIDEO STATISTICS === === <
 
-  // > === === VIDEO DATA === === >
-  const [availableLevels, setAvailableLevels] = useState([]);
-  const [isAutoLevel, setIsAutoLevel] = useState(true);
-  const [currentLevel, setCurrentLevel] = useState(AUTO_LEVEL);
-
-  function changeLevel(upd) {
-    if (upd === AUTO_LEVEL) {
-      hlsRef.current.currentLevel = upd;
-      return;
-    }
-    hlsRef.current.currentLevel = typeof upd === 'function'
-      ? upd(hlsRef.current.currentLevel)
-      : upd.idx;
-  }
-
+  const totalDuration = useTotalDuration(videoRef);
   const currentTimeData = useCurrentTime(videoRef);
-  const pausedData = usePaused(videoRef, () => {
-    showControls();
-    scheduleControlsHide();
+  const pausedData = usePaused(videoRef, paused => {
+    resetControls();
+    setRippleState(paused ? Ripple.STATE.becamePaused : Ripple.STATE.becamePlaying);
   });
   const volumeData = useVolume(videoRef);
   const mutedData = useMuted(videoRef);
   const playbackRateData = usePlaybackRate(videoRef);
-  const qualityData = {
-    val: availableLevels[currentLevel] ? {
-      ...availableLevels[currentLevel], isAutoLevel
-    } : AUTO_LEVEL,
-    set: changeLevel,
-    available: availableLevels
-  };
+  const { qualityData, qualitySetters } = useQuality(videoRef, hlsRef);
   // < === === VIDEO DATA === === <
 
   // > === === HLS INITIALIZATION + CLEANUP === === >
@@ -102,7 +66,7 @@ function VideoPlayer({ src, thumbnail }) {
         hls.loadSource(src);
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-          setAvailableLevels([
+          qualitySetters.setAvailableLevels([
             ...data.levels.map((lvl, idx) => ({ ...lvl, idx })),
             AUTO_LEVEL
           ]);
@@ -110,8 +74,8 @@ function VideoPlayer({ src, thumbnail }) {
         });
 
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, { level }) => {
-          setIsAutoLevel(hlsRef.current?.autoLevelEnabled);
-          setCurrentLevel(level);
+          qualitySetters.setIsAutoLevel(hlsRef.current?.autoLevelEnabled);
+          qualitySetters.setCurrentLevel(level);
         });
 
         hls.on(Hls.Events.BUFFER_FLUSHED, () =>
@@ -137,6 +101,30 @@ function VideoPlayer({ src, thumbnail }) {
   // < === === HLS INITIALIZATION + CLEANUP === === <
 
   // > === === RENDERING === === >
+  useVideoEffect(videoRef, () => {
+    const keyboardControlsListener = e => {
+      switch (e.code) {
+        case 'Space':
+          pausedData.set(curr => !curr);
+          break;
+        case 'ArrowRight':
+          currentTimeData.set(curr => calcSeekedTime(totalDuration, curr, true));
+          break;
+        case 'ArrowLeft':
+          currentTimeData.set(curr => calcSeekedTime(totalDuration, curr, false));
+          break;
+        default:
+          return;
+      }
+
+      resetControls();
+    };
+
+    document.addEventListener('keyup', keyboardControlsListener);
+
+    return () => document.removeEventListener('keyup', keyboardControlsListener);
+  }, [totalDuration]);
+
   return (
     <RatioBox
       ref={videoContainerRef}
@@ -158,15 +146,13 @@ function VideoPlayer({ src, thumbnail }) {
           zIndex={5}
         />
       }
+      <Ripple rippleState={rippleState} setRippleState={setRippleState} />
       <video
         width='100%'
         height='auto'
         ref={videoRef}
         autoPlay={false}
-        onMouseMove={e => excludeControls(e, () => {
-          showControls();
-          scheduleControlsHide();
-        })}
+        onMouseMove={e => excludeControls(e, resetControls)}
         onClick={e => excludeControls(e, () => pausedData.set(curr => !curr))}
       />
       {

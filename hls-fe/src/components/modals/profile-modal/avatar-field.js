@@ -46,7 +46,7 @@ function AvatarField() {
             borderRadius='50%'
             sx={{
               pointerEvents: 'none',
-              bgcolor: 'grey[700]',
+              background: theme => theme.palette.grey[700],
               opacity: 0.5,
               zIndex: 10
             }}

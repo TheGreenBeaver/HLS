@@ -8,4 +8,24 @@ const VIDEO_DATA_SHAPE = shape({
 const AUTO_LEVEL = -1;
 const VIDEO_CONTROLS_ID = 'obs-video-controls-box';
 
-export { VIDEO_DATA_SHAPE, AUTO_LEVEL, VIDEO_CONTROLS_ID };
+
+const SEEK_INTERVAL = 0.05;
+const MIN_SHIFT = 1;
+function calcSeekedTime(
+  totalDuration,
+  currentTime,
+  forward = true,
+  seekInterval = SEEK_INTERVAL,
+  minShift = MIN_SHIFT
+) {
+  if (totalDuration == null) {
+    return currentTime;
+  }
+
+  const shift = Math.max(minShift, totalDuration * seekInterval);
+  return forward
+    ? Math.min(totalDuration, currentTime + shift)
+    : Math.max(0, currentTime - shift);
+}
+
+export { VIDEO_DATA_SHAPE, AUTO_LEVEL, VIDEO_CONTROLS_ID, calcSeekedTime };

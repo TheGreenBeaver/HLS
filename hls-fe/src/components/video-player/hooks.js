@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDelayedFn } from '../../util/hooks';
+import { AUTO_LEVEL, VIDEO_CONTROLS_ID } from './util';
 
 /**
  * @typedef VideoRef
@@ -84,13 +85,14 @@ function useCurrentTime(videoRef, updRate = 200) {
 /**
  *
  * @param {VideoRef} videoRef
- * @param {function} resetControlsVisibility
+ * @param {function(paused: boolean)} onChange
  * @return {{ val: boolean, set: function }}
  */
-function usePaused(videoRef, resetControlsVisibility) {
-  const [paused, setPaused] = useState(false);
+function usePaused(videoRef, onChange) {
+  const [paused, setPaused] = useState(true);
   const [canUpdate, setCanUpdate] = useState(true);
   const enqueued = useRef(null);
+  const firstTime = useRef(true);
 
   useVideoEffect(videoRef, video => {
     setPaused(video.paused);
@@ -99,7 +101,6 @@ function usePaused(videoRef, resetControlsVisibility) {
   });
 
   function change(shouldBePaused) {
-    resetControlsVisibility();
     const video = videoRef.current;
     if (shouldBePaused && !video.paused) {
       video.pause()
@@ -108,6 +109,14 @@ function usePaused(videoRef, resetControlsVisibility) {
       video.play().then(() => setCanUpdate(true));
     }
   }
+
+  useEffect(() => {
+    if (!firstTime.current) {
+      onChange(paused);
+    } else {
+      firstTime.current = false;
+    }
+  }, [paused]);
 
   useEffect(() => {
     if (canUpdate && enqueued.current != null) {
@@ -190,6 +199,54 @@ function usePlaybackRate(videoRef) {
 }
 
 /**
+ * @typedef AvailableArr
+ * @type Array<Object | number>
+ */
+/**
+ *
+ * @param {VideoRef} videoRef
+ * @param {{ current: Object }} hlsRef
+ * @return {{
+ *  qualityData: {
+ *    val: Object | number,
+ *    set: function,
+ *    available: AvailableArr
+ *  },
+ *  qualitySetters: {
+ *    setIsAutoLevel: function(((curr: boolean) => boolean) | boolean),
+ *    setAvailableLevels: function(((curr: AvailableArr) => AvailableArr) | AvailableArr),
+ *    setCurrentLevel: function(((curr: number) => number) | number)
+ *  }
+ * }}
+ */
+function useQuality(videoRef, hlsRef) {
+  const [availableLevels, setAvailableLevels] = useState([]);
+  const [isAutoLevel, setIsAutoLevel] = useState(true);
+  const [currentLevel, setCurrentLevel] = useState(AUTO_LEVEL);
+
+  function changeLevel(upd) {
+    if (upd === AUTO_LEVEL) {
+      hlsRef.current.currentLevel = upd;
+      return;
+    }
+    hlsRef.current.currentLevel = typeof upd === 'function'
+      ? upd(hlsRef.current.currentLevel)
+      : upd.idx;
+  }
+
+  return {
+    qualityData: {
+      val: availableLevels[currentLevel] ? {
+        ...availableLevels[currentLevel], isAutoLevel
+      } : AUTO_LEVEL,
+      set: changeLevel,
+      available: availableLevels
+    },
+    qualitySetters: { setAvailableLevels, setIsAutoLevel, setCurrentLevel }
+  };
+}
+
+/**
  *
  * @param {VideoRef} videoRef
  */
@@ -204,6 +261,51 @@ function useTotalDuration(videoRef) {
   return totalDuration;
 }
 
+const HIDE_CONTROLS_DELAY = 2000;
+
+/**
+ *
+ * @param {boolean} playbackMenuOpen
+ * @return {{
+ *  scheduleControlsHide: function(force: boolean=),
+ *  excludeControls: function(e: MouseEvent, fn: function(e: MouseEvent)),
+ *  controlsVisible: boolean,
+ *  showControls: function,
+ *  resetControls: function
+ * }}
+ */
+function useControls(playbackMenuOpen) {
+  const hideControlsTimeoutRef = useRef(null);
+  const [controlsVisible, setControlsVisible] = useState(false);
+
+  function showControls() {
+    clearTimeout(hideControlsTimeoutRef.current);
+    setControlsVisible(true);
+  }
+
+  function scheduleControlsHide(force) {
+    if (!playbackMenuOpen || force) {
+      hideControlsTimeoutRef.current = setTimeout(
+        () => setControlsVisible(false), HIDE_CONTROLS_DELAY
+      );
+    }
+  }
+
+  function excludeControls(e, fn) {
+    // Doing this via id because ref is used by Slide
+    if (!document.getElementById(VIDEO_CONTROLS_ID)?.contains(e.target)) {
+      fn(e);
+    }
+  }
+
+  function resetControls() {
+    showControls();
+    scheduleControlsHide();
+  }
+
+  return { showControls, scheduleControlsHide, excludeControls, resetControls, controlsVisible };
+}
+
 export {
   useVideoEffect,
 
@@ -211,6 +313,9 @@ export {
   usePaused,
   useVolume, useMuted,
   usePlaybackRate,
+  useQuality,
 
-  useTotalDuration
+  useTotalDuration,
+
+  useControls
 }

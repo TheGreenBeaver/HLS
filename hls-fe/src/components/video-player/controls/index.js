@@ -4,8 +4,8 @@ import ProgressBar from './progress-bar';
 import { VIDEO_CONTROLS_ID, VIDEO_DATA_SHAPE } from '../util';
 import PlayButton from './play-button';
 import Volume from './volume';
-import Playback from './playback';
-import FullScreen from './full-screen';
+import PlaybackSettings from './playback-settings';
+import FullScreenButton from './full-screen-button';
 import { instanceOf, number, object, shape, func } from 'prop-types';
 import Typography from '@mui/material/Typography';
 import { getTimeDisplay } from '../../../util/misc';
@@ -57,14 +57,14 @@ function ControlsComponent({
         </Box>
 
         <Box display='flex' alignItems='center' columnGap={1}>
-          <Playback
+          <PlaybackSettings
             playbackRate={playbackRateData}
             quality={qualityData}
             open={playbackMenuOpen}
             setOpen={setPlaybackMenuOpen}
             scheduleControlsHide={scheduleControlsHide}
           />
-          <FullScreen containerRef={containerRef} />
+          <FullScreenButton containerRef={containerRef} />
         </Box>
       </Box>
     </Box>

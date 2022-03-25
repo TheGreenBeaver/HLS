@@ -4,7 +4,7 @@ import IconButton from '@mui/material/IconButton';
 import { Fullscreen, FullscreenExit } from '@mui/icons-material';
 
 
-function FullScreen({ containerRef }) {
+function FullScreenButton({ containerRef }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   return (
     <IconButton
@@ -20,8 +20,8 @@ function FullScreen({ containerRef }) {
   );
 }
 
-FullScreen.propTypes = {
+FullScreenButton.propTypes = {
   containerRef: shape({ current: object }).isRequired
 };
 
-export default FullScreen;
+export default FullScreenButton;

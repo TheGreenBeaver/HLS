@@ -64,7 +64,7 @@ function getSectionHeight(theme, section) {
 }
 
 
-function Playback({ open, setOpen, scheduleControlsHide, ...props }) {
+function PlaybackSettings({ open, setOpen, scheduleControlsHide, ...props }) {
   const [currentSectionName, setCurrentSectionName] = useState(MAIN);
 
   const buttonRef = useRef(null);
@@ -219,7 +219,7 @@ function Playback({ open, setOpen, scheduleControlsHide, ...props }) {
   );
 }
 
-Playback.propTypes = {
+PlaybackSettings.propTypes = {
   playbackRate: VIDEO_DATA_SHAPE.isRequired,
   quality: VIDEO_DATA_SHAPE.isRequired,
   setOpen: func.isRequired,
@@ -227,4 +227,4 @@ Playback.propTypes = {
   scheduleControlsHide: func.isRequired
 };
 
-export default Playback;
+export default PlaybackSettings;

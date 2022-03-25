@@ -17,9 +17,12 @@ import Box from '@mui/material/Box';
 import { AUTO_LEVEL, calcSeekedTime } from './util';
 import Slide from '@mui/material/Slide';
 import Ripple from './ripple';
+import { useIsMounted } from '../../util/hooks';
 
 
 function VideoPlayer({ src, thumbnail }) {
+  const isMounted = useIsMounted()
+
   // > === === REFS === === >
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
@@ -64,27 +67,35 @@ function VideoPlayer({ src, thumbnail }) {
 
       hls.attachMedia(video);
       hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+        if (!isMounted.current) {
+          return;
+        }
+
         hls.loadSource(src);
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-          qualitySetters.setAvailableLevels([
-            ...data.levels.map((lvl, idx) => ({ ...lvl, idx })),
-            AUTO_LEVEL
-          ]);
-          setIsProcessing(false);
+          if (isMounted.current) {
+            qualitySetters.setAvailableLevels([
+              ...data.levels.map((lvl, idx) => ({ ...lvl, idx })),
+              AUTO_LEVEL
+            ]);
+            setIsProcessing(false);
+          }
         });
 
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, { level }) => {
-          qualitySetters.setIsAutoLevel(hlsRef.current?.autoLevelEnabled);
-          qualitySetters.setCurrentLevel(level);
+          if (isMounted.current) {
+            qualitySetters.setIsAutoLevel(hlsRef.current?.autoLevelEnabled);
+            qualitySetters.setCurrentLevel(level);
+          }
         });
 
         hls.on(Hls.Events.BUFFER_FLUSHED, () =>
-          setLoadedTimeRanges(null)
+          isMounted.current && setLoadedTimeRanges(null)
         );
 
         hls.on(Hls.Events.BUFFER_APPENDED, (_, bufData) =>
-          setLoadedTimeRanges(bufData.timeRanges.video)
+          isMounted.current && setLoadedTimeRanges(bufData.timeRanges.video)
         );
       });
 
@@ -98,7 +109,10 @@ function VideoPlayer({ src, thumbnail }) {
     }
   }, [src]);
 
-  useEffect(() => () => hlsRef.current?.destroy(), []);
+  useEffect(() => () => {
+    hlsRef.current?.detachMedia();
+    hlsRef.current?.destroy();
+  }, []);
   // < === === HLS INITIALIZATION + CLEANUP === === <
 
   // > === === RENDERING === === >

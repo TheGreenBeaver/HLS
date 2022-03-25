@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as _ from 'lodash';
 
 
@@ -19,10 +19,51 @@ function useDelayedFn(fn, updRate, delayer, leading = true) {
   };
 }
 
-const TRIGGER = 'trigger';
-function useTrigger() {
-  const [trigger, setTrigger] = useState(Symbol(TRIGGER));
-  return [trigger, () => setTrigger(Symbol(TRIGGER))];
+function usePopover() {
+  const anchorRef = useRef(null);
+  const [open, setOpen] = useState(false);
+
+  function closeMenu() {
+    setOpen(false);
+  }
+
+  function openMenu() {
+    setOpen(true);
+  }
+
+  return {
+    triggerProps: { ref: anchorRef, onClick: openMenu },
+    popoverProps: {
+      anchorEl: anchorRef.current,
+      open: !!anchorRef.current && open,
+      onClose: closeMenu
+    },
+    closeMenu
+  };
 }
 
-export { useDelayedFn, useTrigger };
+function useIsMounted() {
+  const isMounted = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false };
+  }, []);
+
+  return isMounted;
+}
+
+function useMountedState(initialState) {
+  const isMounted = useIsMounted();
+  const [state, setState] = useState(initialState);
+
+  function setStateIfMounted(upd) {
+    if (isMounted.current) {
+      setState(upd);
+    }
+  }
+
+  return [state, setStateIfMounted];
+}
+
+export { useDelayedFn, usePopover, useMountedState, useIsMounted };

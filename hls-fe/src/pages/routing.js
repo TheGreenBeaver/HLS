@@ -31,7 +31,7 @@ function getDefaultRoute({ isAuthorized, isVerified }) {
 function Routing() {
   const userState = useUserState();
 
-  if (!userState.isReady) {
+  if (userState.isAuthorized && !userState.isFetched) {
     return <Loading />;
   }
 

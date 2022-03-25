@@ -2,12 +2,10 @@ import { useSelector } from 'react-redux';
 
 function useUserState() {
   const { userData, isAuthorized } = useSelector(state => state.account);
-  const isFetched = !!userData;
   return {
     isAuthorized,
-    isFetched,
+    isFetched: !!userData,
     isVerified: !!userData?.isVerified,
-    isReady: isAuthorized && isFetched
   };
 }
 

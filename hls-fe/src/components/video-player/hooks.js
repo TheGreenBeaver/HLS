@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useDelayedFn } from '../../util/hooks';
+import { useDelayedFn, useIsMounted, useMountedState } from '../../util/hooks';
 import { AUTO_LEVEL, VIDEO_CONTROLS_ID } from './util';
 import { getUpd } from '../../util/misc';
 
@@ -16,12 +16,14 @@ import { getUpd } from '../../util/misc';
  * @param {Array<*>} [extraDeps = []]
  */
 function useVideoEffect(videoRef, effect, extraDeps = []) {
+  const isMounted = useIsMounted();
+
   useEffect(() => {
-    if (!videoRef.current) {
+    if (!videoRef.current || !isMounted.current) {
       return;
     }
 
-    effect(videoRef.current);
+    return effect(videoRef.current);
   }, [videoRef, ...extraDeps]);
 }
 
@@ -32,7 +34,7 @@ function useVideoEffect(videoRef, effect, extraDeps = []) {
  * @return {{ val: T, respondToEvent: function, forceNewState: function }}
  */
 function useThrottledState(initialValue, updRate) {
-  const [state, setState] = useState(initialValue);
+  const [state, setState] = useMountedState(initialValue);
   const respondToEvent = useDelayedFn(setState, updRate, 'throttle');
 
   return { val: state, respondToEvent, forceNewState: setState };
@@ -61,6 +63,8 @@ function useNumeric(
     video[`on${eventName}`] = () => {
       respondToEvent(video[fieldName]);
     };
+
+    return () => { video[`on${eventName}`] = null; };
   });
 
   function set(upd) {
@@ -99,6 +103,11 @@ function usePaused(videoRef, onChange) {
     setPaused(video.paused);
     video.onpause = () => setPaused(true);
     video.onplay = () => setPaused(false);
+
+    return () => {
+      video.onpause = null;
+      video.onplay = null;
+    }
   });
 
   function change(shouldBePaused) {
@@ -188,6 +197,8 @@ function usePlaybackRate(videoRef) {
     video.onratechange = () => {
       setPlaybackRate(video.playbackRate);
     };
+
+    return () => { video.onratechange = null; };
   });
 
   function set(upd) {
@@ -277,11 +288,13 @@ function useFullScreen(containerRef) {
  * @param {VideoRef} videoRef
  */
 function useTotalDuration(videoRef) {
-  const [totalDuration, setTotalDuration] = useState(null);
+  const [totalDuration, setTotalDuration] = useMountedState(null);
 
   const changeDuration = useDelayedFn(setTotalDuration, 250, 'debounce', false);
   useVideoEffect(videoRef, video => {
     video.ondurationchange = () => changeDuration(video.duration);
+
+    return () => { video.ondurationchange = null; };
   });
 
   return totalDuration;
@@ -302,7 +315,7 @@ const HIDE_CONTROLS_DELAY = 2000;
  */
 function useControls(playbackMenuOpen) {
   const hideControlsTimeoutRef = useRef(null);
-  const [controlsVisible, setControlsVisible] = useState(false);
+  const [controlsVisible, setControlsVisible] = useMountedState(false);
 
   function showControls() {
     clearTimeout(hideControlsTimeoutRef.current);

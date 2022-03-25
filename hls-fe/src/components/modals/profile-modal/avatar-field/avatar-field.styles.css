@@ -1,0 +1,27 @@
+@keyframes avatar-field-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.5;
+  }
+}
+
+@keyframes avatar-field-fade-out {
+  from {
+    opacity: 0.5;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.obs-avatar-field-in {
+  animation: avatar-field-fade-in 225ms forwards;
+}
+
+.obs-avatar-field-out {
+  animation: avatar-field-fade-out 225ms forwards;
+}

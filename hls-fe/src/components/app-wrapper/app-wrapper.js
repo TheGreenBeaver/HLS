@@ -18,8 +18,19 @@ function AppWrapper({ children }) {
         </>
       }
       <Box
-        sx={isReady ? {
-          mt: 2
+        id='the-main-box'
+        sx={isReady ? theme => {
+          const { toolbar } = theme.mixins;
+          const extraSpacing = parseInt(theme.spacing(2));
+          return Object.entries(toolbar).reduce((result, [propName, propVal]) => {
+            if (typeof propVal === 'number') {
+              return { ...result, paddingTop: `${propVal + extraSpacing}px` };
+            }
+            const adjustedPropName = propName.includes('min-width:0px')
+              ? `${propName} and (max-width:${theme.breakpoints.values.sm - 1}px)`
+              : propName;
+            return { ...result, [adjustedPropName]: { paddingTop: `${propVal.minHeight + extraSpacing}px` } };
+          }, {});
         } : {
           mt: 8,
           display: 'flex',

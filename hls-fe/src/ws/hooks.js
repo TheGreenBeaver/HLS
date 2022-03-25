@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import ws from './index';
+import { useMountedState } from '../util/hooks';
 
 
 function useWsCleanup() {
@@ -42,9 +43,9 @@ function useWsRequest(
   onError = errData => console.log(errData),
   onAny = () => {}
 ) {
-  const [isFetching, setIsFetching] = useState(condition);
-  const [err, setErr] = useState(null);
-  const [data, setData] = useState(null);
+  const [isFetching, setIsFetching] = useMountedState(condition);
+  const [err, setErr] = useMountedState(null);
+  const [data, setData] = useMountedState(null);
 
   useEffect(() => {
     const fetchData = async () => {

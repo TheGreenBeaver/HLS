@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { node } from 'prop-types';
 import Box from '@mui/material/Box';
 
 
-function CenterBox({ children, ...otherProps }) {
+function CenterBoxComponent({ children, ...otherProps }, ref) {
   const props = {
     width: '100%',
     height: '100%',
@@ -13,11 +13,13 @@ function CenterBox({ children, ...otherProps }) {
     ...otherProps
   };
   return (
-    <Box {...props}>
+    <Box {...props} ref={ref}>
       {children}
     </Box>
   );
 }
+
+const CenterBox = forwardRef(CenterBoxComponent);
 
 CenterBox.propTypes = {
   children: node

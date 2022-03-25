@@ -12,5 +12,4 @@
 
 .obs-ripple {
   animation: 1s forwards fade-and-grow;
-  pointer-events: none;
 }

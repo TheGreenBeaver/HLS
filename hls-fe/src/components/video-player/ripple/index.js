@@ -39,7 +39,7 @@ function Ripple({ rippleState, setRippleState }) {
 
   return (
     <CenterBox
-      sx={{ background: 'transparent' }}
+      sx={{ background: 'transparent', pointerEvents: 'none' }}
       position='absolute'
       zIndex={6}
       top={0}

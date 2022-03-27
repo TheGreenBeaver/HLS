@@ -13,6 +13,7 @@ const USER_PRIVATE = {
 };
 
 const videoBasicAttrs = ['id', 'name', 'location', 'thumbnail'];
+const videoFullAttrs = [...videoBasicAttrs, 'description'];
 const VIDEO_BASIC = {
   attributes: videoBasicAttrs,
   include: [{
@@ -21,6 +22,7 @@ const VIDEO_BASIC = {
     attributes: userPublicAttrs
   }]
 };
+const VIDEO_FULL = { ...VIDEO_BASIC, attributes: videoFullAttrs };
 
 module.exports = {
   DUMMY,
@@ -28,5 +30,6 @@ module.exports = {
   USER_PUBLIC,
   USER_PRIVATE,
 
-  VIDEO_BASIC
+  VIDEO_BASIC,
+  VIDEO_FULL
 };

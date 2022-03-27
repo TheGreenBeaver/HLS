@@ -27,7 +27,7 @@ function ResetPassword() {
           validationSchema={object({
             password: string()
               .required(validationMessages.required)
-              .max(100, validationMessages.max),
+              .max(100, validationMessages.maxLength),
             passwordCopy: string()
               .required(validationMessages.required)
               .oneOf([ref('password'), null], 'Passwords don\'t match'),

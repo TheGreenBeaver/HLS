@@ -33,13 +33,13 @@ function SignUp() {
           validationSchema={object({
             username: string()
               .required(validationMessages.required)
-              .max(50, validationMessages.max),
+              .max(50, validationMessages.maxLength),
             email: string()
               .email(validationMessages.email)
               .required(validationMessages.required),
             password: string()
               .required(validationMessages.required)
-              .max(100, validationMessages.max)
+              .max(100, validationMessages.maxLength)
           })}
           onSubmit={(values, { setSubmitting, setErrors }) => {
             setSubmitting(true);

@@ -5,7 +5,7 @@ import { CenterBox } from '../layout';
 
 function Loading() {
   return (
-    <CenterBox height='100vh'>
+    <CenterBox height='100%'>
       <CircularProgress size={100} thickness={5} />
     </CenterBox>
   );

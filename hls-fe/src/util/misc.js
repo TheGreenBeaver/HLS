@@ -22,6 +22,17 @@ function getUpd(upd, curr) {
   return typeof upd === 'function' ? upd(curr) : upd;
 }
 
+/**
+ *
+ * @param {File} rawFile
+ * @param {function(res: string | ArrayBuffer)} cb
+ */
+function readFile(rawFile, cb) {
+  const fr = new FileReader();
+  fr.onload = loadEv => cb(loadEv.target.result);
+  fr.readAsDataURL(rawFile);
+}
+
 export {
-  toBuf, toStr, getTimeDisplay, getUpd
+  toBuf, toStr, getTimeDisplay, getUpd, readFile
 };

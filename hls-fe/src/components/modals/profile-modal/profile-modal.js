@@ -12,10 +12,10 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormActions from './form-actions';
 import Box from '@mui/material/Box';
-import AvatarField from './avatar-field';
+import AvatarField from './avatar-field/avatar-field';
 import Typography from '@mui/material/Typography';
 import PasswordChange from './password-change';
-import { object, string } from 'yup';
+import { number, object, string } from 'yup';
 import fields from './fields';
 import validationMessages from '../../../util/validation-messages';
 import UsernameField from './username-field';
@@ -82,14 +82,17 @@ function ProfileModal() {
       validationSchema={object({
         username: string()
           .required(validationMessages.required)
-          .max(50, validationMessages.max),
+          .max(50, validationMessages.maxLength),
         password: string()
-          .max(100, validationMessages.max)
+          .max(100, validationMessages.maxLength)
           .when(fields.isChangingPassword, {
             is: true,
             then: schema => schema.required(validationMessages.required),
             otherwise: schema => schema.notRequired()
-          })
+          }),
+        avatar: object({
+          size: number().max(4 * 1024 * 1024, validationMessages.maxSize) // 4MB
+        }).notRequired()
       })}
       onSubmit={(values, formikHelpers) => {
         const changed = pickBy(values, (fieldVal, fieldName) =>

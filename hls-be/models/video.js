@@ -29,6 +29,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: false,
       defaultValue: 'https://via.placeholder.com/1920x1080.png/008000C?text=No+Thumbnail+Specified'
+    },
+    description: {
+      type: DataTypes.STRING(1000),
+      allowNull: false,
+      defaultValue: ''
     }
   }, {
     sequelize,

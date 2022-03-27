@@ -5,7 +5,7 @@ const fs = require('fs');
 const httpStatus = require('http-status');
 const { paginate } = require('../../util/sql');
 const { serializeVideo } = require('../../serializers/videos');
-const { VIDEO_BASIC } = require('../../util/query-options');
+const { VIDEO_BASIC, VIDEO_FULL } = require('../../util/query-options');
 const { now } = require('lodash');
 const { processUploadedFile } = require('../../ffmpeg');
 const { Op } = require('sequelize');
@@ -82,7 +82,7 @@ async function listVideos(payload, { respond }) {
  */
 async function retrieveVideo(payload, { respond }) {
   const { id } = payload;
-  const theVideo = await Video.findByPk(id, { ...VIDEO_BASIC, rejectOnEmpty: true });
+  const theVideo = await Video.findByPk(id, { ...VIDEO_FULL, rejectOnEmpty: true });
   return respond({ payload: serializeVideo(theVideo) });
 }
 

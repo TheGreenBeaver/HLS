@@ -5,6 +5,9 @@ import { Formik, Form, Field } from 'formik';
 import { SimpleFileUpload, TextField } from 'formik-mui';
 import SubmitButton from '../../../components/submit-button';
 import { useSnackbar } from 'notistack';
+import { number, object, string } from 'yup';
+import validationMessages from '../../../util/validation-messages';
+import ThumbnailField from './thumbnail-field';
 
 
 function UploadVideo() {
@@ -13,7 +16,7 @@ function UploadVideo() {
   return (
     <Formik
       initialValues={{
-        name: '', file: null
+        name: '', file: null, description: '', thumbnail: null
       }}
       onSubmit={(values, { setSubmitting }) => {
         setSubmitting(true);
@@ -23,6 +26,19 @@ function UploadVideo() {
           .catch(console.log) // TODO: Upload Video errors
           .finally(() => setSubmitting(false));
       }}
+      validationSchema={object({
+        name: string()
+          .required()
+          .max(50, validationMessages.maxLength),
+        file: object({
+          size: number().max(1024 * 1024 * 1024, validationMessages.maxSize) // 1GB
+        }).required(),
+        description: string()
+          .max(1000, validationMessages.maxLength),
+        thumbnail: object({
+          size: number().max(4 * 1024 * 1024, validationMessages.maxSize) // 4MB
+        }).notRequired()
+      })}
     >
       <Form>
         <Field
@@ -38,12 +54,7 @@ function UploadVideo() {
           label='Video File'
           sx={{ mb: 2 }}
         />
-        <Field
-          component={SimpleFileUpload}
-          name='thumbnail'
-          label='Thumbnail'
-        />
-
+        <ThumbnailField />
         <SubmitButton>
           Upload
         </SubmitButton>

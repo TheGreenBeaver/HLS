@@ -1,0 +1,27 @@
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 0.5;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.obs-file-upload-hint-in {
+  animation: fade-in 225ms forwards;
+}
+
+.obs-file-upload-hint-out {
+  animation: fade-out 225ms forwards;
+}

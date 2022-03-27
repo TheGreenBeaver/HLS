@@ -39,7 +39,7 @@ function SignIn() {
               .email(validationMessages.email)
               .required(validationMessages.required),
             password: string()
-              .max(100, validationMessages.max)
+              .max(100, validationMessages.maxLength)
               .required()
           })}
           onSubmit={(values, { setSubmitting, setErrors }) => {

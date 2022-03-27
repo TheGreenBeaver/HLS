@@ -10,7 +10,7 @@ import { useIsReady } from '../../store/selectors';
 function AppWrapper({ children }) {
   const isReady = useIsReady();
   return (
-    <Container component='main' maxWidth={isReady ? 'lg' : 'xs'}>
+    <Container component='main' maxWidth={isReady ? 'lg' : 'xs'} sx={{ minHeight: '100vh' }}>
       {
         isReady && <>
           <Header />

@@ -63,7 +63,7 @@ const ENCODING_SETTINGS = {
 
     [BLOCKS.audio]: {
       'c:a': 'copy', // codec
-      // 'b:a': '128k', // bitrate
+      'b:a': '128k', // bitrate
       ac: 2 // audio channels amt
     },
 

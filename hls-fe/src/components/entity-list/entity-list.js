@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { elementType, func, number, oneOf } from 'prop-types';
 import ACTIONS from '../../ws/actions';
 import Grid from '@mui/material/Grid';
@@ -17,16 +17,19 @@ function defaultComposePayload(q) {
 
 function EntityList({ Entity, actionName, composePayload, pageSize }) {
   const { search } = useLocation();
-  const timesRef = useRef(0);
   const [hasMore, setHasMore] = useState(true);
   const [entities, setEntities] = useMountedState([]);
   const [isFetching, setIsFetching] = useState(false);
 
-  function loadMore(page) {
-    if (isFetching || !hasMore || timesRef.current > 5) {
+  useEffect(() => {
+    setHasMore(true);
+    setEntities([]);
+  }, [search]);
+
+  function loadMore(page, force) {
+    if (isFetching || (!hasMore && !force)) {
       return;
     }
-    timesRef.current++;
     setIsFetching(true);
     const parsedSearch = queryString.parse(search);
     const payload = { page, pageSize, ...composePayload(parsedSearch?.[Q]) };

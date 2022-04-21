@@ -22,7 +22,8 @@ async function getLiveStreamProc(liveStreamDir) {
   const logsFile = await fs.promises.open(logsFileName, 'a');
 
   const proc = childProcess.spawn('ffmpeg', fullArgs, {
-    windowsVerbatimArguments: true
+    windowsVerbatimArguments: true,
+    stdio: 'pipe',
   });
 
   // ffmpeg writes to stderr instead of stdout

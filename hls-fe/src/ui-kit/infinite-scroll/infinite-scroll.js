@@ -20,10 +20,8 @@ function InfiniteScroll({ loadMore, hasMore, children, threshold, isLoading }) {
   const { search } = useLocation();
 
   useEffect(() => {
-    pageRef.current = hasMore ? 2 : 1;
-    if (hasMore) {
-      loadMore(1);
-    }
+    pageRef.current = 1;
+    loadMore(1, true);
   }, [search]);
 
   useEffect(() => {

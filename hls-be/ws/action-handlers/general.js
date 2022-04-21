@@ -25,9 +25,6 @@ async function search(payload, { respond, wsRef }) {
 
   if (searchFor === SEARCHABLE.user || !searchFor) {
     const whereUsers = { username: like };
-    if (wsRef.userAccessLogic.isAuthorized) {
-      whereUsers.id = { [Op.not]: wsRef.userAccessLogic.user.id };
-    }
     const matchingUsers = await User.findAll({ where: whereUsers, ...USER_PUBLIC });
     allResults.push(...matchingUsers.map(u => ({
       mainData: serializeUser(u), kind: SEARCHABLE.user

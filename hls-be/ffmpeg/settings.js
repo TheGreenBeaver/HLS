@@ -68,7 +68,9 @@ const ENCODING_SETTINGS = {
     },
 
     [BLOCKS.general]: {
-      fps: 15,
+      vsync: 'vfr',
+      fflags: '+igndts',
+      framerate: 25,
       f: 'hls', // format
       hls_time: 4, // duration of a fragment in seconds
       hls_playlist_type: 'event', // save all fragments

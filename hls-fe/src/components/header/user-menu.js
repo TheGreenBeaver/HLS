@@ -7,14 +7,16 @@ import ws from '../../ws';
 import ACTIONS from '../../ws/actions';
 import { logOut } from '../../store/actions/account';
 import { openProfileModal } from '../../store/actions/general';
-import { useDispatch } from 'react-redux';
-import { useUserData } from '../../store/selectors';
+import { useDispatch, useSelector } from 'react-redux';
 import { usePopover } from '../../util/hooks';
+import { Person } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import { links } from '../../pages/routing';
 
 
 function UserMenu() {
   const dispatch = useDispatch();
-  const { avatar, username, isVerified } = useUserData();
+  const { userData, isAuthorized } = useSelector(state => state.account);
   const { closeMenu, popoverProps, triggerProps } = usePopover();
 
   function onLogOutClick() {
@@ -32,11 +34,11 @@ function UserMenu() {
   return (
     <>
       <Avatar
-        src={avatar}
+        src={userData?.avatar}
         sx={{ cursor: 'pointer' }}
         {...triggerProps}
       >
-        {username[0]}
+        {userData ? userData.username[0] : <Person fontSize='large' />}
       </Avatar>
 
       <Menu
@@ -46,19 +48,34 @@ function UserMenu() {
         }}
         {...popoverProps}
       >
-        <MenuItem>
-          {username}
-        </MenuItem>
-        <Divider />
         {
-          isVerified &&
+          userData &&
+          [
+            <MenuItem key='username'>
+              {userData.username}
+            </MenuItem>,
+            <Divider key='divider' />
+          ]
+        }
+        {
+          userData?.isVerified &&
           <MenuItem onClick={onEditProfileClick}>
             Edit profile
           </MenuItem>
         }
-        <MenuItem onClick={onLogOutClick}>
-          Log out
-        </MenuItem>
+        {
+          isAuthorized
+            ? <MenuItem onClick={onLogOutClick}>
+              Log out
+            </MenuItem>
+            : <MenuItem
+              component={Link}
+              to={links.auth.signIn.path}
+              onClick={closeMenu}
+            >
+              Sign in
+            </MenuItem>
+        }
       </Menu>
     </>
   );

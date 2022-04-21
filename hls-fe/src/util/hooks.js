@@ -1,23 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import * as _ from 'lodash';
+import { useSnackbar } from 'notistack';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import { Close } from '@mui/icons-material';
 
-
-/**
- *
- * @param {function} fn
- * @param {number} updRate
- * @param {'throttle'|'debounce'} delayer
- * @param {boolean} [leading = true]
- * @return {function}
- */
-function useDelayedFn(fn, updRate, delayer, leading = true) {
-  const delayedFnRef = useRef(_[delayer](fn, updRate, { leading }));
-
-  return (...args) => {
-    delayedFnRef.current.cancel();
-    delayedFnRef.current(...args);
-  };
-}
 
 function usePopover() {
   const anchorRef = useRef(null);
@@ -39,6 +26,23 @@ function usePopover() {
       onClose: closeMenu
     },
     closeMenu
+  };
+}
+
+/**
+ *
+ * @param {function} fn
+ * @param {number} updRate
+ * @param {'throttle'|'debounce'} delayer
+ * @param {boolean} [leading = true]
+ * @return {function}
+ */
+function useDelayedFn(fn, updRate, delayer, leading = true) {
+  const delayedFnRef = useRef(_[delayer](fn, updRate, { leading }));
+
+  return (...args) => {
+    delayedFnRef.current.cancel();
+    delayedFnRef.current(...args);
   };
 }
 
@@ -66,4 +70,25 @@ function useMountedState(initialState) {
   return [state, setStateIfMounted];
 }
 
-export { useDelayedFn, usePopover, useMountedState, useIsMounted };
+function useAlert() {
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+  /**
+   * @param {string | React.ReactNode} message
+   * @param {'info' | 'success' | 'warning' | 'error'} [variant = 'info']
+   * @param {React.FC?} Extra
+   */
+  const showAlert = (message, variant = 'info', Extra) =>
+    enqueueSnackbar(message, {
+      variant, action: key =>
+        <Box display='flex' alignItems='center'>
+          {!!Extra && <Extra onClick={() => closeSnackbar(key)} />}
+          <IconButton onClick={() => closeSnackbar(key)}>
+            <Close sx={{ color: `${variant}.dark` }} />
+          </IconButton>
+        </Box>
+    });
+  return showAlert;
+}
+
+export { useDelayedFn, usePopover, useMountedState, useIsMounted, useAlert };

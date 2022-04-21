@@ -1,0 +1,27 @@
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 0.7;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.obs-file-field-hint-in {
+  animation: fade-in 225ms forwards;
+}
+
+.obs-file-field-hint-out {
+  animation: fade-out 225ms forwards;
+}

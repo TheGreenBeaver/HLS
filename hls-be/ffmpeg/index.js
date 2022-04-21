@@ -1,8 +1,9 @@
-const { composeArgs, KINDS } = require('./settings');
+const composeArgs = require('./settings');
 const childProcess = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { formatTime } = require('../util/misc');
+const { formatTime, CONTENT_KINDS } = require('../util/misc');
+const { LOG_F_NAME, DONE_LOG_F_NAME } = require('../settings');
 
 
 /**
@@ -12,14 +13,20 @@ const { formatTime } = require('../util/misc');
  * @return {Promise<{ proc: ChildProcessWithoutNullStreams, masterFileName: string }>}
  */
 async function getLiveStreamProc(tempFileName, liveStreamDir) {
-  const { args, masterFileName } = await composeArgs(tempFileName, liveStreamDir, KINDS.liveStream);
-  const fullArgs = ['-follow 1', ...args];
+  const { args, masterFileName } = await composeArgs(tempFileName, liveStreamDir, CONTENT_KINDS.liveStream);
+  const fullArgs = [
+    '-follow', '1',
+    ...(args.map(a => {
+      const spaceIdx = a.indexOf(' ');
+      return [a.substring(0, spaceIdx), a.substring(spaceIdx + 1)];
+    }).flat().filter(Boolean))
+  ];
 
-  const logsFileName = path.join(liveStreamDir, 'ffmpeg-log.txt');
+  const logsFileName = path.join(liveStreamDir, LOG_F_NAME);
   const logsFile = await fs.promises.open(logsFileName, 'a');
 
   const proc = childProcess.spawn('ffmpeg', fullArgs, {
-    windowsVerbatimArguments: false
+    windowsVerbatimArguments: true
   });
 
   // ffmpeg writes to stderr instead of stdout
@@ -30,6 +37,7 @@ async function getLiveStreamProc(tempFileName, liveStreamDir) {
 
   proc.on('close', async () => {
     await logsFile.close();
+    await fs.promises.rename(logsFileName, path.join(liveStreamDir, DONE_LOG_F_NAME));
     await fs.promises.rm(tempFileName);
   });
 
@@ -43,7 +51,7 @@ async function getLiveStreamProc(tempFileName, liveStreamDir) {
  * @return {Promise<string>}
  */
 async function processUploadedFile(originalFileName, resultDir) {
-  const { args, masterFileName } = await composeArgs(originalFileName, resultDir, KINDS.video);
+  const { args, masterFileName } = await composeArgs(originalFileName, resultDir, CONTENT_KINDS.video);
   const fullArgs = `ffmpeg ${args.join(' ')}`;
 
   try {

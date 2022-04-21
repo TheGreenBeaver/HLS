@@ -6,10 +6,10 @@ import ACTIONS from '../../../ws/actions';
 import { updateUserData } from '../../../store/actions/account';
 import { useUserData } from '../../../store/selectors';
 import { useDispatch } from 'react-redux';
-import { useFormikContext } from 'formik';
 import { Cancel } from '@mui/icons-material';
-import fields from './fields';
-import PasswordField from '../../password-field';
+import fieldNames from './field-names';
+import PasswordField from '../../../ui-kit/form-builder/fields/password-field';
+import useEditableView from '../../../ui-kit/form-builder/util/use-editable-view';
 
 
 function PasswordChange() {
@@ -17,7 +17,7 @@ function PasswordChange() {
 
   const { passwordChangeRequested } = useUserData();
   const dispatch = useDispatch();
-  const { status: { isEditing }, isSubmitting, values, setFieldValue } = useFormikContext();
+  const { isEditing, isSubmitting, values, setFieldValue } = useEditableView();
 
   if (passwordChangeRequested) {
     return (
@@ -30,7 +30,7 @@ function PasswordChange() {
             background: 'transparent !important',
             '&:hover': {
               color: 'error.light'
-            }
+            },
           }}
           disableRipple
           disabled={isDroppingPasswordChange || isSubmitting}
@@ -41,7 +41,7 @@ function PasswordChange() {
               .then(({ payload }) => dispatch(updateUserData(payload)))
               .finally(() => setIsDroppingPasswordChange(false));
           }}
-          startIcon={<Cancel />}
+          startIcon={<Cancel sx={{ fontSize: '1.2em !important' }} />}
           color='error'
         >
           Cancel
@@ -54,23 +54,15 @@ function PasswordChange() {
     return null;
   }
 
-  const isChangingPassword = values[fields.isChangingPassword];
+  const isChangingPassword = values[fieldNames.isChangingPassword];
   return (
     <>
-      {
-        isChangingPassword &&
-        <PasswordField
-          size='small'
-          label='New password'
-          required
-          name={fields.password}
-        />
-      }
+      {isChangingPassword && <PasswordField required name={fieldNames.newPassword} />}
       <Button
         sx={{ mt: 0.5 }}
         onClick={() => {
-          setFieldValue(fields.isChangingPassword, !isChangingPassword);
-          setFieldValue(fields.password, '');
+          setFieldValue(fieldNames.isChangingPassword, !isChangingPassword);
+          setFieldValue(fieldNames.newPassword, '');
         }}
       >
         {isChangingPassword ? 'Cancel' : 'Change password'}

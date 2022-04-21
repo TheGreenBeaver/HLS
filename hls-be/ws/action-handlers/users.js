@@ -5,15 +5,16 @@ const { NON_FIELD_ERR, AVATARS_DIR } = require('../../settings');
 const httpStatus = require('http-status');
 const { getHost } = require('../../util/misc');
 const sendMail = require('../../mail');
-const { ACTIONS } = require('../constants');
+const { ACTIONS, CONFIRMABLE } = require('../constants');
 const fs = require('fs');
 const path = require('path');
 const { serializeUser } = require('../../serializers/users');
+const { USER_PUBLIC, USER_OTHER } = require('../../util/query-options');
 
 
 const CRYPTO_FIELDS = ['email', 'username'];
 const CONFIRM = {
-  verify: {
+  [CONFIRMABLE.verify]: {
     action: 'verify',
     field: 'isVerified',
     applyChangesAndGetValue: user => {
@@ -21,7 +22,7 @@ const CONFIRM = {
       return true;
     },
   },
-  changePassword: {
+  [CONFIRMABLE.changePassword]: {
     action: 'change_password',
     field: 'passwordChangeRequested',
     applyChangesAndGetValue: user => {
@@ -31,13 +32,13 @@ const CONFIRM = {
       return false;
     },
   },
-  resetPassword: {
+  [CONFIRMABLE.resetPassword]: {
     action: 'reset_password',
     field: 'passwordChangeRequested',
     applyChangesAndGetValue: (user, wsRef) => {
       wsRef.wsServerRef.openClients.forEach(client => {
-        if (client.isAuthorized && client.user.id === user.id) {
-          client.logOut();
+        if (client.userAccessLogic.matches(user)) {
+          client.userAccessLogic.logOut();
         }
       });
 
@@ -99,7 +100,7 @@ async function signUp(payload, { wsRef, respond }) {
 
   const savedUser = await newUser.save();
   await sendConfirmationLink(CONFIRM.verify.action, savedUser);
-  return wsRef.logIn(savedUser, ACTIONS.signUp);
+  return wsRef.userAccessLogic.logIn(savedUser, ACTIONS.signUp);
 }
 
 /**
@@ -110,25 +111,25 @@ async function signUp(payload, { wsRef, respond }) {
  * @return {Promise<void>}
  */
 async function editUser(payload, { wsRef, respond }) {
-  const { avatar, noAvatar, username, password } = payload;
-  const theUser = wsRef.user;
+  const { avatar, username, newPassword } = payload;
+  const theUser = wsRef.userAccessLogic.user;
 
-  if (noAvatar) {
-    theUser.avatar = null;
-  } else if (avatar) {
+  if (avatar) {
     await fs.promises.mkdir(AVATARS_DIR, { recursive: true });
     const fName = `user-${theUser.id}${path.extname(avatar.name)}`;
     const location = path.join(AVATARS_DIR, fName);
     await fs.promises.writeFile(location, avatar.data);
     theUser.avatar = location;
+  } else if (typeof avatar !== 'undefined') {
+    theUser.avatar = null;
   }
 
   if (username) {
     theUser.username = username;
   }
 
-  if (password) {
-    theUser.newPassword = password;
+  if (newPassword) {
+    theUser.newPassword = hash(newPassword);
     await sendConfirmationLink(CONFIRM.changePassword.action, theUser);
   }
 
@@ -144,7 +145,7 @@ async function editUser(payload, { wsRef, respond }) {
  * @return {Promise<void>}
  */
 async function dropPasswordChange(_, { wsRef, respond }) {
-  const theUser = wsRef.user;
+  const theUser = wsRef.userAccessLogic.user;
   theUser.newPassword = null;
   await theUser.save();
   return respond({ payload: serializeUser(theUser) });
@@ -158,18 +159,68 @@ async function dropPasswordChange(_, { wsRef, respond }) {
  * @return {Promise<void>}
  */
 async function resetPassword(payload, { wsRef, respond }) {
-  const { password, email } = payload;
-  const theUser = wsRef.user || (await User.findOne({ where: { email }, rejectOnEmpty: true }));
-  theUser.newPassword = password;
+  const { newPassword, email } = payload;
+  const theUser = wsRef.userAccessLogic.user || (await User.findOne({ where: { email }, rejectOnEmpty: true }));
+  theUser.newPassword = newPassword;
   await theUser.validate();
 
-  const encryptedPassword = hash(password);
-  theUser.setDataValue('newPassword', encryptedPassword);
+  theUser.newPassword = hash(newPassword);
   await theUser.save();
   await sendConfirmationLink(CONFIRM.resetPassword.action, theUser);
   return respond({ status: httpStatus.NO_CONTENT });
 }
 
+/**
+ *
+ * @param {Object} payload
+ * @param {ObsWebSocket} wsRef
+ * @param {function(Object): Promise<void>} respond
+ * @return {Promise<void>}
+ */
+async function subscribe(payload, { wsRef, respond }) {
+  const { id } = payload;
+  let contentMaker;
+  try {
+    contentMaker = await User.findByPk(id, { ...USER_PUBLIC, rejectOnEmpty: true });
+  } catch (e) {
+    return respond({
+      status: httpStatus.BAD_REQUEST,
+      payload: { id: ['No such streamer'] }
+    });
+  }
+
+  await wsRef.userAccessLogic.user.addSubscribedTo(contentMaker);
+  return respond({ payload: serializeUser(contentMaker) });
+}
+
+/**
+ *
+ * @param _
+ * @param {ObsWebSocket} wsRef
+ * @param {function(Object): Promise<void>} respond
+ * @return {Promise<void>}
+ */
+async function listChannels(_, { wsRef, respond }) {
+  const theUser = wsRef.userAccessLogic.user;
+  const channels = await theUser.getSubscribedTo({ ...USER_PUBLIC, through: { attributes: [] } });
+  return respond({ payload: channels.map(serializeUser) });
+}
+
+/**
+ *
+ * @param {object} payload
+ * @param {ObsWebSocket} wsRef
+ * @param {function(Object): Promise<void>} respond
+ * @return {Promise<void>}
+ */
+async function retrieveUser(payload, { wsRef, respond }) {
+  const opts = wsRef.userAccessLogic.isAuthorized
+    ? { where: { '$subscribers.id$': wsRef.userAccessLogic.user.id }, ...USER_OTHER }
+    : USER_PUBLIC;
+  const u = await User.findByPk(payload.id, { ...opts, rejectOnEmpty: true });
+  return respond({ payload: serializeUser(u) });
+}
+
 module.exports = {
-  confirm, signUp, editUser, dropPasswordChange, resetPassword
+  confirm, signUp, editUser, dropPasswordChange, resetPassword, subscribe, listChannels, retrieveUser
 };

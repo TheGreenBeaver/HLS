@@ -17,6 +17,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: false
     },
+    isLiveNow: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
     location: {
       type: DataTypes.TEXT,
       allowNull: true // The video is first created without location
@@ -34,6 +39,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(1000),
       allowNull: false,
       defaultValue: ''
+    },
+    plan: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     sequelize,

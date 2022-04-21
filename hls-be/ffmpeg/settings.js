@@ -1,6 +1,8 @@
 const path = require('path');
 const { mapValues } = require('lodash');
 const { getAchievableResolutions, composeScalingArgs } = require('./resolutions');
+const { CONTENT_KINDS } = require('../util/misc');
+const { HLS_SEGMENT_DUR } = require('../settings');
 
 // --- --- ENUMS --- --- //
 const BLOCKS = {
@@ -12,10 +14,6 @@ const SPLITTING_TYPES = {
   none: 'none',
   sameForEach: 'sameForEach',
   full: 'full',
-};
-const KINDS = {
-  liveStream: 'liveStream',
-  video: 'video',
 };
 
 // --- --- SETTINGS --- --- //
@@ -31,7 +29,7 @@ const OUT_FILES = {
   master: 'master.m3u8'
 };
 const ENCODING_SETTINGS = {
-  [KINDS.video]: {
+  [CONTENT_KINDS.video]: {
     [BLOCKS.video]: {
       'c:v': 'libx264', // codec
       crf: 17, // quality (1 - best, 51 - worst, 17 is at the top of the recommended "sane range")
@@ -47,32 +45,35 @@ const ENCODING_SETTINGS = {
 
     [BLOCKS.general]: {
       f: 'hls', // format
-      hls_time: 4, // duration of a fragment in seconds
+      hls_time: HLS_SEGMENT_DUR, // duration of a fragment in seconds
       hls_playlist_type: 'vod',
       hls_flags: 'independent_segments',
       hls_segment_type: 'mpegts',
     }
   },
 
-  [KINDS.liveStream]: {
+  [CONTENT_KINDS.liveStream]: {
     [BLOCKS.video]: {
       'c:v': 'libx264', // codec
-      crf: 28, // quality (1 - best, 51 - worst, 28 is at the bottom of the recommended "sane range")
-      preset: 'veryfast',
-      sc_threshold: 0 // more precise scene detection
+      crf: 30, // quality (1 - best, 51 - worst, 28 is at the bottom of the recommended "sane range")
+      preset: 'ultrafast',
+      tune: 'zerolatency'
     },
 
     [BLOCKS.audio]: {
-      'c:a': 'aac', // codec
+      'c:a': 'copy', // codec
       'b:a': '128k', // bitrate
       ac: 2 // audio channels amt
     },
 
     [BLOCKS.general]: {
       f: 'hls', // format
-      hls_time: 4, // duration of a fragment in seconds
+      hls_time: HLS_SEGMENT_DUR, // duration of a fragment in seconds
       hls_playlist_type: 'event', // save all fragments
+      hls_flags: 'independent_segments',
       hls_segment_type: 'mpegts',
+      refs: 2,
+      bufsize: '256k'
     }
   }
 };
@@ -116,7 +117,7 @@ function composeDirIndependentArgs(resolutionsAmt, kind) {
 }
 
 async function composeArgs(inpFile, outDir, kind) {
-  const achievableResolutions = await getAchievableResolutions(inpFile);
+  const achievableResolutions = await getAchievableResolutions(inpFile, kind === CONTENT_KINDS.liveStream ? 3 : null);
   const resolutionsAmt = achievableResolutions.length;
 
   const streamNames = achievableResolutions.map((_, streamIdx) => `[v${streamIdx + 1}]`).join('');
@@ -144,4 +145,4 @@ async function composeArgs(inpFile, outDir, kind) {
   return { args, masterFileName: master };
 }
 
-module.exports = { KINDS, composeArgs };
+module.exports = composeArgs;

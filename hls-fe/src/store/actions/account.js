@@ -14,6 +14,7 @@ const updateUserData = userData => ({
   type: account.UPDATE_USER_DATA,
   userData
 });
+
 export {
   signIn,
   logOut,

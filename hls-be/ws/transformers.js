@@ -8,7 +8,8 @@ const KINDS = {
 const IDF = {
   file: 'f',
   fileArray: 'a',
-  other: 'o'
+  other: 'o',
+  date: 'd'
 };
 const DELIMITER = ':';
 
@@ -35,7 +36,7 @@ function processJsonLike(asBuf, asString) {
     const res = {};
     for (const entry of Object.entries(dataPiece)) {
       const [fullFieldName, fieldValue] = entry;
-      const fieldName = fullFieldName.replace(/^[fao]_/, '');
+      const fieldName = fullFieldName.replace(/^[faod]_/, '');
 
       switch (fullFieldName[0]) {
         case IDF.file:
@@ -43,6 +44,9 @@ function processJsonLike(asBuf, asString) {
           break;
         case IDF.fileArray:
           res[fieldName] = fieldValue.map(fileStats => getFileData(fileStats, jsonPartEnd, asBuf));
+          break;
+        case IDF.date:
+          res[fieldName] = new Date(fieldValue);
           break;
         case IDF.other:
           res[fieldName] = fieldValue?.constructor.name === 'Object' ? _process(fieldValue) : fieldValue;

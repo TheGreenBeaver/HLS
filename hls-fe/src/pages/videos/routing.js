@@ -15,8 +15,14 @@ const links = {
 const routes = [
   new RouteConfig(links.list, VideosList),
   new RouteConfig(links.single, SingleVideo),
-  new RouteConfig(links.upload, UploadVideo),
-  new RouteConfig(links.goLive, GoLive)
+  new RouteConfig(links.upload, UploadVideo, {
+    isAuthorized: true,
+    isVerified: true
+  }),
+  new RouteConfig(links.goLive, GoLive, {
+    isAuthorized: true,
+    isVerified: true
+  })
 ];
 
 export { links, routes };

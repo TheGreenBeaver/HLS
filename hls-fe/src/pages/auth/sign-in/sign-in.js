@@ -2,88 +2,49 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import StyledLink from '../../../components/styled-link';
+import StyledLink from '../../../ui-kit/styled-link';
 import { links } from '../routing';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
 import ws from '../../../ws';
 import ACTIONS from '../../../ws/actions';
 import { useDispatch } from 'react-redux';
 import { signIn } from '../../../store/actions/account';
-import SubmitButton from '../../../components/submit-button';
-import { object, string } from 'yup';
-import { mapValues } from 'lodash';
-import validationMessages from '../../../util/validation-messages';
-import PasswordField from '../../../components/password-field';
-import { NON_FIELD_ERR } from '../../../util/constants';
-import NonFieldErrDisplay from '../../../components/non-field-err-display';
+import PasswordField from '../../../ui-kit/form-builder/fields/password-field';
+import SmartForm from '../../../ui-kit/form-builder/smart-form';
+import { FIELD_TYPES } from '../../../ui-kit/form-builder/util/validation';
+import finishSubmit from '../../../ui-kit/form-builder/util/finish-submit';
+import StandardTextField from '../../../ui-kit/form-builder/fields/standard-text-field';
 
+
+const fieldNames = {
+  email: 'email',
+  password: 'password',
+};
 
 function SignIn() {
   const dispatch = useDispatch();
 
   return (
     <>
-      <Typography component='h1' variant='h5'>
+      <Typography variant='h4'>
         Sign in
       </Typography>
       <Box sx={{ mt: 1 }}>
-        <Formik
-          initialValues={{
-            email: '',
-            password: '',
-            [NON_FIELD_ERR]: null
+        <SmartForm
+          submitText='Sign in'
+          initialValues={{ [fieldNames.email]: '', [fieldNames.password]: '' }}
+          validationConfig={{
+            [fieldNames.email]: [FIELD_TYPES.email, null, true],
+            [fieldNames.password]: [FIELD_TYPES.text, 100, true]
           }}
-          validationSchema={object({
-            email: string()
-              .email(validationMessages.email)
-              .required(validationMessages.required),
-            password: string()
-              .max(100, validationMessages.maxLength)
-              .required()
-          })}
-          onSubmit={(values, { setSubmitting, setErrors }) => {
-            setSubmitting(true);
-            ws
-              .request(ACTIONS.authenticate, values)
-              .then(({ payload }) => dispatch(signIn(payload.token)))
-              .catch(e => {
-                const errorsObj = mapValues(e.payload, v => v.join('; '));
-                setErrors(errorsObj);
-              })
-              .finally(() => setSubmitting(false))
-          }}
+          onSubmit={(values, formikHelpers) => finishSubmit(
+            ws.request(ACTIONS.authenticate, values).then(({ payload }) =>
+              dispatch(signIn(payload.token))
+            ), formikHelpers
+          )}
         >
-          <Form>
-            <Field
-              component={TextField}
-              margin='normal'
-              required
-              fullWidth
-              label='Email Address'
-              name='email'
-              autoComplete='email'
-            />
-            <PasswordField
-              margin='normal'
-              required
-              fullWidth
-              name='password'
-              label='Password'
-              type='password'
-              id='password'
-              autoComplete='current-password'
-            />
-            <SubmitButton
-              fullWidth
-              variant='contained'
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Sign In
-            </SubmitButton>
-            <NonFieldErrDisplay />
-          </Form>
-        </Formik>
+          <StandardTextField required name={fieldNames.email} />
+          <PasswordField required name={fieldNames.password} autoComplete='current-password' />
+        </SmartForm>
 
         <Grid container>
           <Grid item xs>

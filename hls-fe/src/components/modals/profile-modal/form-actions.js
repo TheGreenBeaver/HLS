@@ -1,13 +1,13 @@
 import React from 'react';
-import { useFormikContext } from 'formik';
 import Button from '@mui/material/Button';
-import SubmitButton from '../../submit-button';
+import SubmitButton from '../../../ui-kit/form-builder/interactions/submit-button';
 import DialogActions from '@mui/material/DialogActions';
 import { func } from 'prop-types';
+import useEditableView from '../../../ui-kit/form-builder/util/use-editable-view';
 
 
 function FormActions({ onClose }) {
-  const { status: { isEditing }, setStatus, isSubmitting, handleSubmit } = useFormikContext();
+  const { isEditing, setIsEditing, isSubmitting, handleSubmit, resetAndExit } = useEditableView();
 
   return (
     <DialogActions sx={{ columnGap: 1 }}>
@@ -19,7 +19,7 @@ function FormActions({ onClose }) {
           </SubmitButton>
           <Button
             disabled={isSubmitting}
-            onClick={() => setStatus({ isEditing: false })}
+            onClick={resetAndExit}
           >
             Cancel
           </Button>
@@ -27,7 +27,7 @@ function FormActions({ onClose }) {
       }
       {
         !isEditing &&
-        <Button onClick={() => setStatus({ isEditing: true })}>
+        <Button onClick={() => setIsEditing(true)}>
           Edit
         </Button>
       }

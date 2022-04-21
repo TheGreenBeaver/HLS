@@ -16,51 +16,40 @@ function useWsAction(actionName, handler, deps = []) {
 }
 
 /**
- * @typedef WsResponse
- * @type {Object}
- * @property {any} payload
- * @property {number} status
- */
-
-/**
  *
+ * @template T
  * @param {string} action
- * @param {any} payload
- * @param {boolean} [condition = true]
+ * @param {function=} getPayload
+ * @param {T} initialData
  * @param {Array<any>} [deps = []]
- * @param {(function(payload: any))=} onSuccess
- * @param {(function(e: WsResponse))=} onError
- * @param {(function())=} onAny
- * @return {{ isFetching: boolean, err: WsResponse, data: any }}
+ * @param {boolean} [condition = true]
+ * @param {(function(payload: any): T)=} transformer
+ * @return {{ isFetching: boolean, err: { payload: any, status: number }, data: T, setData: function }}
  */
 function useWsRequest(
-  action, payload,
-
-  condition = true,
-  deps = [],
-
-  onSuccess = () => {},
-  onError = errData => console.log(errData),
-  onAny = () => {}
+  action, {
+    getPayload = () => undefined,
+    initialData = [],
+    deps = [],
+    condition = true,
+    transformer = v => v
+  } = {}
 ) {
   const [isFetching, setIsFetching] = useMountedState(condition);
   const [err, setErr] = useMountedState(null);
-  const [data, setData] = useMountedState(null);
+  const [data, setData] = useMountedState(initialData);
 
   useEffect(() => {
     const fetchData = async () => {
       setErr(null);
       setIsFetching(true);
       try {
-        const response = await ws.request(action, payload);
-        setData(response.payload);
-        onSuccess(response.payload);
+        const response = await ws.request(action, getPayload(...deps));
+        setData(transformer(response.payload));
       } catch (e) {
         setErr(e);
-        onError(e);
       } finally {
         setIsFetching(false);
-        onAny();
       }
     };
 
@@ -69,7 +58,7 @@ function useWsRequest(
     }
   }, deps);
 
-  return { isFetching, err, data };
+  return { isFetching, err, data, setData };
 }
 
 export { useWsCleanup, useWsAction, useWsRequest };

@@ -19,9 +19,8 @@ function NewVideoMenu() {
 
       <Menu
         sx={{ mt: 1 }}
-        MenuListProps={{
-          sx: { minWidth: 150 }
-        }}
+        transformOrigin={{ horizontal: 'center', vertical: 'top' }}
+        MenuListProps={{ sx: { minWidth: 150 } }}
         {...popoverProps}
       >
         <MenuItem

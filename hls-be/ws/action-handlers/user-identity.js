@@ -22,7 +22,7 @@ async function me(payload, { wsRef, respond }) {
       ...USER_PRIVATE,
       rejectOnEmpty: true
     });
-    wsRef.user = user;
+    wsRef.userAccessLogic.user = user;
     return respond({ payload: serializeUser(user) });
   } catch (e) {
     return respond({ status: httpStatus.BAD_REQUEST, payload: { [NON_FIELD_ERR]: ['Authorization failed'] } });
@@ -37,7 +37,7 @@ async function me(payload, { wsRef, respond }) {
  * @return {Promise<void>}
  */
 async function logOut(_, { wsRef, respond }) {
-  wsRef.logOut();
+  wsRef.userAccessLogic.logOut();
   return respond({ status: httpStatus.NO_CONTENT });
 }
 
@@ -63,7 +63,7 @@ async function authenticate(payload , { wsRef, respond }) {
     });
   }
 
-  return wsRef.logIn(user, ACTIONS.authenticate);
+  return wsRef.userAccessLogic.logIn(user, ACTIONS.authenticate);
 }
 
 module.exports = {

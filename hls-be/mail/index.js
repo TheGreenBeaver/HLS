@@ -1,11 +1,24 @@
-const { isDev } = require('../util/env');
+const { isDev, getVar } = require('../util/env');
+const nodemailer = require('nodemailer');
 
-async function sendMail(content, email) {
+async function sendMail(content, receiver) {
   if (isDev) {
-    console.log(`TO: ${email}\nCONTENT: ${content}`)
-  } else {
-    // TODO: Send real emails
+    return console.log(`TO: ${receiver}\nCONTENT: ${content}`)
   }
+
+  const user = getVar('EMAIL_USER');
+  const pass = getVar('EMAIL_PASS');
+  const service = getVar('EMAIL_SERVICE', 'gmail');
+  const sender = getVar('EMAIL_SENDER', 'no-reply@in-sight.com');
+
+  const transporter = nodemailer.createTransport({ service, auth: { user, pass } });
+  const message = {
+    from: sender,
+    to: receiver,
+    ...content
+  };
+
+  return transporter.sendMail(message);
 }
 
 module.exports = sendMail;

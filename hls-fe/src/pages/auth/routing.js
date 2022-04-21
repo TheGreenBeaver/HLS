@@ -19,23 +19,17 @@ const links = {
 
 const routes = [
   new RouteConfig(links.signIn, SignIn, {
-    isAuthorized: false,
-    isVerified: RouteConfig.ANY
+    isAuthorized: false, narrow: true
   }),
   new RouteConfig(links.signUp, SignUp, {
-    isAuthorized: false,
-    isVerified: RouteConfig.ANY
+    isAuthorized: false, narrow: true
   }),
-  new RouteConfig(links.confirm, Confirm, {
-    isAuthorized: RouteConfig.ANY,
-    isVerified: RouteConfig.ANY
-  }),
+  new RouteConfig(links.confirm, Confirm),
   new RouteConfig(links.notVerified, NotVerified, {
     isVerified: false
   }),
   new RouteConfig(links.resetPassword, ResetPassword, {
-    isAuthorized: false,
-    isVerified: RouteConfig.ANY
+    isAuthorized: false, narrow: true
   })
 ];
 

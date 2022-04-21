@@ -8,6 +8,7 @@ const KINDS = {
 const IDF = {
   file: 'f',
   fileArray: 'a',
+  date: 'd',
   other: 'o'
 };
 const DELIMITER = ':';
@@ -45,6 +46,11 @@ async function processJsonLike(data) {
           offset += buf.byteLength;
           parts.push(buf);
         }
+        continue;
+      }
+
+      if (fieldValue instanceof Date) {
+        res[`${IDF.date}_${fieldName}`] = fieldValue.toISOString();
         continue;
       }
 

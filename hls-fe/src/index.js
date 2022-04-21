@@ -19,7 +19,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 
 import { SnackbarProvider } from 'notistack';
 
-import App from './App';
+import App from './app';
 
 
 ReactDOM.render(
@@ -27,11 +27,11 @@ ReactDOM.render(
     <ThemeProvider theme={theme}>
       <ScopedCssBaseline>
         <ReduxProvider store={store}>
-          <SnackbarProvider>
-            <Router>
+          <Router>
+            <SnackbarProvider autoHideDuration={3000}>
               <App />
-            </Router>
-          </SnackbarProvider>
+            </SnackbarProvider>
+          </Router>
         </ReduxProvider>
       </ScopedCssBaseline>
     </ThemeProvider>

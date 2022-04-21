@@ -2,10 +2,11 @@ const path = require('path');
 const { getVar } = require('./env');
 const { PORT, MEDIA_PATH, MEDIA_DIR } = require('../settings');
 const { padStart } = require('lodash');
+const fs = require('fs');
 
 
 function getFileIsUsable(file, basename) {
-  return file.indexOf('.') !== 0 && file !== basename && path.extname(file) === '.js'
+  return file.indexOf('.') !== 0 && file !== basename && path.extname(file) === '.js' && !file.startsWith('_');
 }
 
 function getHost() {
@@ -21,8 +22,7 @@ function composeMediaPath(file, baseDir = MEDIA_DIR, basePath = MEDIA_PATH) {
     return file;
   }
 
-  const fixSepPattern = new RegExp('\\' + path.sep, 'g');
-  const purePath = path.relative(baseDir, file).replace(fixSepPattern, '/');
+  const purePath = path.relative(baseDir, file).replace(/\\/g, '/');
   return `${getHost()}${basePath}/${purePath}`;
 }
 
@@ -44,6 +44,22 @@ function formatTime(now = new Date()) {
   return `[${date} ${time}]`;
 }
 
+function exportModule(basename, dirname) {
+  return fs
+    .readdirSync(dirname)
+    .filter(f => getFileIsUsable(f, basename))
+    .reduce((mod, modFile) => ({
+      ...mod,
+      ...require(`${dirname}/${path.basename(modFile, '.js')}`)
+    }), {});
+}
+
+const CONTENT_KINDS = {
+  liveStream: 'liveStream',
+  video: 'video',
+};
+
 module.exports = {
-  getFileIsUsable, getHost, composeMediaPath, formatTime
+  getFileIsUsable, getHost, composeMediaPath, formatTime, exportModule,
+  CONTENT_KINDS
 };

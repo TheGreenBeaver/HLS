@@ -12,8 +12,7 @@ const reducer = (state = initialState, action) => {
     case account.UPDATE_USER_DATA:
       return { ...state, userData: { ...state.userData, ...action.userData } };
     case account.SIGN_IN:
-      const { token } = action;
-      saveCredentials(token);
+      saveCredentials(action.token);
       return { ...state, isAuthorized: true };
     case account.LOG_OUT:
       clearCredentials();

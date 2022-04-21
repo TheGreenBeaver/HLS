@@ -1,94 +1,60 @@
 import React from 'react';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { Form, Formik, Field } from 'formik';
-import { object, string, ref } from 'yup';
-import validationMessages from '../../../util/validation-messages';
+import { ref } from 'yup';
 import ws from '../../../ws';
 import ACTIONS from '../../../ws/actions';
-import { mapValues, pick } from 'lodash';
-import SubmitButton from '../../../components/submit-button';
-import PasswordField from '../../../components/password-field';
-import { useUserState } from '../../../store/selectors';
-import { TextField } from 'formik-mui';
+import { pick } from 'lodash';
+import PasswordField from '../../../ui-kit/form-builder/fields/password-field';
+import SmartForm from '../../../ui-kit/form-builder/smart-form';
+import { FIELD_TYPES } from '../../../ui-kit/form-builder/util/validation';
+import finishSubmit from '../../../ui-kit/form-builder/util/finish-submit';
+import StandardTextField from '../../../ui-kit/form-builder/fields/standard-text-field';
+import { useReturnToApp } from '../../access-control';
+import { useAlert } from '../../../util/hooks';
 
+
+const fieldNames = {
+  newPassword: 'newPassword',
+  passwordCopy: 'passwordCopy',
+  email: 'email',
+};
 
 function ResetPassword() {
-  const { isAuthorized } = useUserState();
+  const showAlert = useAlert();
+  const returnToApp = useReturnToApp();
 
   return (
     <>
-      <Typography component='h1' variant='h5'>
+      <Typography variant='h5'>
         Reset password
       </Typography>
       <Box mt={3}>
-        <Formik
-          initialValues={{ password: '', passwordCopy: '', email: '' }}
-          validationSchema={object({
-            password: string()
-              .required(validationMessages.required)
-              .max(100, validationMessages.maxLength),
-            passwordCopy: string()
-              .required(validationMessages.required)
-              .oneOf([ref('password'), null], 'Passwords don\'t match'),
-            email: string()
-              .email(validationMessages.email)
-              .test('email', validationMessages.required, v => isAuthorized ? true : !!v)
-          })}
+        <SmartForm
+          submitText='Reset'
+          initialValues={{ [fieldNames.newPassword]: '', [fieldNames.passwordCopy]: '', [fieldNames.email]: '' }}
+          validationConfig={{
+            [fieldNames.newPassword]: [FIELD_TYPES.text, 100, true],
+            [fieldNames.passwordCopy]: [
+              FIELD_TYPES.text, 100, true,
+              schema => schema.oneOf([ref(fieldNames.newPassword), null], 'Passwords don\'t match')
+            ],
+            [fieldNames.email]: [FIELD_TYPES.email, null, true]
+          }}
           onSubmit={(values, formikHelpers) => {
-            formikHelpers.setSubmitting(true);
-            const toPick = ['password'];
-            if (!isAuthorized) {
-              toPick.push('email');
-            }
-            const toSend = pick(values, toPick);
-            ws
-              .request(ACTIONS.resetPassword, toSend)
-              .catch(e => {
-                const errorsObj = mapValues(e.payload, v => v.join('; '));
-                formikHelpers.setErrors(errorsObj);
-              })
-              .finally(() => formikHelpers.setSubmitting(false));
+            const toSend = pick(values, [fieldNames.newPassword, fieldNames.email]);
+            finishSubmit(
+              ws.request(ACTIONS.resetPassword, toSend).then(() => {
+                showAlert('A confirmation email was sent to the provided address');
+                returnToApp(); // no auth / verification changes happens here, so need to redirect manually
+              }), formikHelpers
+            );
           }}
         >
-          <Form>
-            {
-              !isAuthorized &&
-              <Field
-                name='email'
-                component={TextField}
-                required
-                fullWidth
-                label='Email'
-                autoComplete='email'
-                margin='normal'
-              />
-            }
-            <PasswordField
-              required
-              fullWidth
-              label='New password'
-              name='password'
-              autoComplete='new-password'
-              margin='normal'
-            />
-            <PasswordField
-              required
-              margin='normal'
-              fullWidth
-              label='Repeat new password'
-              name='passwordCopy'
-            />
-
-            <SubmitButton
-              fullWidth
-              variant='contained'
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Reset
-            </SubmitButton>
-          </Form>
-        </Formik>
+          <StandardTextField name={fieldNames.email} required />
+          <PasswordField name={fieldNames.newPassword} required />
+          <PasswordField name={fieldNames.passwordCopy} required autoComplete='false' />
+        </SmartForm>
       </Box>
     </>
   );

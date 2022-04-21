@@ -1,4 +1,4 @@
-const ObsWebSocketServer = require('./ws/obs-web-socket-server');
+const ObsWebSocketServer = require('./ws/classes/obs-web-socket-server');
 const { isDev } = require('./util/env');
 
 const wsServer = new ObsWebSocketServer();

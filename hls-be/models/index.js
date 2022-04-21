@@ -21,7 +21,7 @@ const basename = path.basename(__filename);
 const db = {};
 fs
   .readdirSync(__dirname)
-  .filter(file => getFileIsUsable(file, basename) && !file.startsWith('_abstract.'))
+  .filter(file => getFileIsUsable(file, basename))
   .forEach(file => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;

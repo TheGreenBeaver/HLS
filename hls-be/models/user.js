@@ -13,13 +13,13 @@ module.exports = (sequelize, DataTypes) => {
         as: 'videos'
       });
       this.belongsToMany(models.User, {
-        through: 'UserSubscription',
+        through: models.UserSubscription,
         as: 'subscribedTo',
         foreignKey: 'subscriber_id',
         otherKey: 'content_maker_id'
       });
       this.belongsToMany(models.User, {
-        through: 'UserSubscription',
+        through: models.UserSubscription,
         as: 'subscribers',
         foreignKey: 'content_maker_id',
         otherKey: 'subscriber_id'

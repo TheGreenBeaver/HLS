@@ -1,16 +1,15 @@
 const { Video } = require('../../models');
 const path = require('path');
-const { VIDEOS_DIR, TEMP_DIR } = require('../../settings');
 const fs = require('fs');
 const httpStatus = require('http-status');
 const { paginate } = require('../../util/sql');
 const { serializeVideo } = require('../../serializers/videos');
 const { VIDEO_BASIC, VIDEO_FULL } = require('../../util/query-options');
-const { now } = require('lodash');
 const { processUploadedFile } = require('../../ffmpeg');
-const { Op } = require('sequelize');
 const { ACTIONS } = require('../constants');
-const makeThumbnail = require('../../ffmpeg/thumbnails');
+const { prepareTempFiles, prepareThumbnail, makeWhereClause } = require('./_video-utils');
+const { CONTENT_KINDS } = require('../../util/misc');
+const { Op } = require('sequelize');
 
 
 /**
@@ -21,43 +20,27 @@ const makeThumbnail = require('../../ffmpeg/thumbnails');
  * @return {Promise<void>}
  */
 async function uploadVideo(payload, { respond, wsRef }) {
-  const { name: videoName, file: { name: fileName, data: fileRawBytes }, thumbnail: providedThumbnail } = payload;
-  const theUser = wsRef.user;
+  const {
+    name: videoName,
+    file: { name: fileName, data: fileRawBytes },
+    thumbnail: providedThumbnail,
+    description
+  } = payload;
+  const theUser = wsRef.userAccessLogic.user;
 
-  const tempDir = path.join(TEMP_DIR, `user-${theUser.id}`);
-  await fs.promises.mkdir(tempDir, { recursive: true });
-  const ext = path.extname(fileName);
-  const tempFileName = path.join(tempDir, `${now()}${ext}`);
+  const { tempFileName, resultDir, tempDir } =
+    await prepareTempFiles(theUser, path.extname(fileName), CONTENT_KINDS.video);
+
   await fs.promises.writeFile(tempFileName, fileRawBytes);
-
-  const resultDir = path.join(VIDEOS_DIR, `user-${wsRef.user.id}`, `video-${now()}`);
-  await fs.promises.mkdir(resultDir, { recursive: true });
-
-  const newVideo = await wsRef.user.createVideo(
-    { name: videoName },
-    { returning: ['id', 'name'] }
+  const thumbnailLocation = await prepareThumbnail(tempFileName, resultDir, tempDir, providedThumbnail);
+  const newVideo = await theUser.createVideo(
+    { name: videoName, thumbnail: thumbnailLocation, description }, { returning: ['id', 'name'] }
   );
-  await respond({ status: httpStatus.ACCEPTED, payload: newVideo });
-
-  let thumbnailInputPath = tempFileName;
-  const fromImage = !!providedThumbnail;
-
-  if (fromImage) {
-    const providedExt = path.extname(providedThumbnail.name);
-    const thumbnailsDir = path.join(tempDir, 'thumbnails')
-    thumbnailInputPath = path.join(thumbnailsDir, `${now()}${providedExt}`);
-    await fs.promises.mkdir(thumbnailsDir, { recursive: true });
-    await fs.promises.writeFile(thumbnailInputPath, providedThumbnail.data);
-  }
-
-  newVideo.thumbnail = await makeThumbnail(thumbnailInputPath, resultDir, fromImage);
-
-  if (fromImage) {
-    await fs.promises.rm(thumbnailInputPath);
-  }
+  await respond({ status: httpStatus.ACCEPTED, payload: { id: newVideo.id } });
 
   newVideo.location = await processUploadedFile(tempFileName, resultDir);
   await newVideo.save();
+
   return wsRef.sendMessage({ status: httpStatus.CREATED, payload: newVideo, action: ACTIONS.videoProcessedAck });
 }
 
@@ -65,24 +48,55 @@ async function uploadVideo(payload, { respond, wsRef }) {
  *
  * @param {Object} payload
  * @param {function(Object): Promise<void>} respond
+ * @param {ObsWebSocket} wsRef
  * @return {Promise<void>}
  */
-async function listVideos(payload, { respond }) {
+async function listVideos(payload, { respond, wsRef }) {
   const { page, pageSize, filters } = payload;
-  const where = { ...filters, location: { [Op.not]: null } };
+  const baseRestriction = makeWhereClause(wsRef);
+  let searchRestriction;
+  const where = {};
+  if (filters) {
+    if ('isStream' in filters) {
+      where.isStream = filters.isStream;
+    }
+    if ('isLiveNow' in filters) {
+      if (filters.isStream === false) {
+        return respond({
+          status: httpStatus.BAD_REQUEST,
+          payload: { isLiveNow: ['Can\'t apply this restriction to non-streams'] }
+        });
+      }
+      where.isLiveNow = filters.isLiveNow;
+    }
+    if ('author' in filters) {
+      where.author_id = filters.author;
+    }
+    if ('q' in filters) {
+      const like = { [Op.like]: `%${filters.q}%` };
+      searchRestriction = { [Op.or]: [{ name: like }, { description: like }] };
+    }
+  }
+  if (searchRestriction) {
+    where[Op.and] = [baseRestriction, searchRestriction];
+  } else {
+    Object.assign(where, baseRestriction);
+  }
   const toSend = await paginate(Video, page, pageSize, { where, ...VIDEO_BASIC }, serializeVideo);
-  return respond({ payload: toSend });
+  return respond(toSend);
 }
 
 /**
  *
  * @param {Object} payload
  * @param {function(Object): Promise<void>} respond
+ * @param {ObsWebSocket} wsRef
  * @return {Promise<void>}
  */
-async function retrieveVideo(payload, { respond }) {
+async function retrieveVideo(payload, { respond, wsRef }) {
   const { id } = payload;
-  const theVideo = await Video.findByPk(id, { ...VIDEO_FULL, rejectOnEmpty: true });
+  const where = makeWhereClause(wsRef);
+  const theVideo = await Video.findByPk(id, { where, ...VIDEO_FULL, rejectOnEmpty: true });
   return respond({ payload: serializeVideo(theVideo) });
 }
 

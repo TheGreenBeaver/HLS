@@ -1,9 +1,9 @@
 const ACTIONS = {
   startStream: 'startStream',
   endStream: 'endStream',
-
-  streamStartAck: 'streamStartAck',
-  streamEndAck: 'streamEndAck',
+  confirmPlan: 'confirmPlan',
+  streamStateAck: 'streamStateAck',
+  streamPlannedReminder: 'streamPlannedReminder',
 
   signUp: 'signUp',
   confirm: 'confirm',
@@ -14,11 +14,16 @@ const ACTIONS = {
   editUser: 'editUser',
   dropPasswordChange: 'dropPasswordChange',
   resetPassword: 'resetPassword',
+  subscribe: 'subscribe',
+  listChannels: 'listChannels',
+  retrieveUser: 'retrieveUser',
 
   uploadVideo: 'uploadVideo',
   videoProcessedAck: 'videoProcessedAck',
   listVideos: 'listVideos',
   retrieveVideo: 'retrieveVideo',
+
+  search: 'search',
 };
 
 export default ACTIONS;

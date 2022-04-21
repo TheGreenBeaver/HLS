@@ -1,4 +1,4 @@
-import { padStart } from 'lodash';
+import { Duration } from 'luxon';
 
 
 async function toBuf(...parts) {
@@ -10,29 +10,37 @@ async function toStr(buf) {
 }
 
 function getTimeDisplay(valInSeconds) {
-  const roundedVal = Math.floor(valInSeconds);
-  const sec = roundedVal % 60;
-  const min = Math.floor(roundedVal / 60) % 60;
-  const h = Math.floor(roundedVal / 60 / 60);
-
-  return `${h ? `${h}:` : ''}${min}:${padStart(`${sec}`, 2, '0')}`
+  const dur = Duration.fromMillis(valInSeconds * 1000);
+  return dur.toFormat(dur.hours ? 'hh:mm:ss' : 'mm:ss');
 }
 
 function getUpd(upd, curr) {
   return typeof upd === 'function' ? upd(curr) : upd;
 }
 
-/**
- *
- * @param {File} rawFile
- * @param {function(res: string | ArrayBuffer)} cb
- */
-function readFile(rawFile, cb) {
-  const fr = new FileReader();
-  fr.onload = loadEv => cb(loadEv.target.result);
-  fr.readAsDataURL(rawFile);
+function blockEvent(e) {
+  e.preventDefault();
+  e.stopPropagation();
 }
 
-export {
-  toBuf, toStr, getTimeDisplay, getUpd, readFile
-};
+const UNITS = { B: 'B', KB: 'KB', MB: 'MB', GB: 'GB', TB: 'TB' };
+
+const unitsPower = Object.values(UNITS);
+const bytesPerPower = 1024;
+
+function unitToBytes(val, unit) {
+  const power = unitsPower.indexOf(unit);
+  return val * Math.pow(bytesPerPower, power);
+}
+
+function bytesToUnit(byteVal) {
+  let unitIdx = 0;
+  let val = byteVal;
+  while (val >= bytesPerPower && unitIdx < unitsPower.length) {
+    val /= bytesPerPower;
+    unitIdx++;
+  }
+  return `${val.toFixed(2)} ${unitsPower[unitIdx]}`;
+}
+
+export { toBuf, toStr, getTimeDisplay, getUpd, blockEvent, UNITS, bytesToUnit, unitToBytes };

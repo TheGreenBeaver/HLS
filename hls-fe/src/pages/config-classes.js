@@ -1,3 +1,8 @@
+import { withAccessControl } from './access-control';
+import queryString from 'query-string';
+import { last } from 'lodash';
+
+
 class AppLink {
   /**
    *
@@ -10,7 +15,12 @@ class AppLink {
   get(...params) {
     const pathParts = this.path.split(/(?<!\\)\//);
     let paramIdx = 0;
-    return pathParts.map(part => part.startsWith(':') ? params[paramIdx++] : part).join('/');
+    const withPathParams = pathParts.map(part => part.startsWith(':') ? params[paramIdx++] : part).join('/');
+    if (paramIdx >= params.length) {
+      return withPathParams;
+    }
+
+    return `${withPathParams}/?${queryString.stringify(last(params))}`;
   }
 }
 
@@ -18,20 +28,21 @@ class RouteConfig {
   static ANY = 'any';
 
   constructor(appLink, component, {
-    isAuthorized = true,
-    isVerified = true,
-    exact = true
+    isAuthorized = RouteConfig.ANY,
+    isVerified = RouteConfig.ANY,
+    exact = true,
+    narrow = false
   } = {}) {
     this.path = appLink instanceof AppLink ? appLink.path : appLink;
-    this.component = component;
-    this.isAuthorized = isAuthorized;
-    this.isVerified = isVerified;
+    this.component = withAccessControl(
+      component, narrow, userState => this.fits({ isAuthorized, isVerified }, userState)
+    );
     this.exact = exact;
   }
 
-  fits(userState) {
+  fits(requiredState, userState) {
     return ['isAuthorized', 'isVerified'].every(stateField =>
-      [userState[stateField], RouteConfig.ANY].includes(this[stateField])
+      [userState[stateField], RouteConfig.ANY].includes(requiredState[stateField])
     );
   }
 }

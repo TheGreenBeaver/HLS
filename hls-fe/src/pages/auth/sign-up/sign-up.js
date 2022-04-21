@@ -1,109 +1,62 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import StyledLink from '../../../components/styled-link';
+import StyledLink from '../../../ui-kit/styled-link';
 import { links } from '../routing';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
 import ws from '../../../ws';
 import ACTIONS from '../../../ws/actions';
 import { useDispatch } from 'react-redux';
 import { signIn } from '../../../store/actions/account';
-import SubmitButton from '../../../components/submit-button';
-import { object, string } from 'yup';
-import validationMessages from '../../../util/validation-messages';
-import { mapValues } from 'lodash';
-import PasswordField from '../../../components/password-field';
+import PasswordField from '../../../ui-kit/form-builder/fields/password-field';
+import SmartForm from '../../../ui-kit/form-builder/smart-form';
+import { FIELD_TYPES } from '../../../ui-kit/form-builder/util/validation';
+import finishSubmit from '../../../ui-kit/form-builder/util/finish-submit';
+import StandardTextField from '../../../ui-kit/form-builder/fields/standard-text-field';
 
+
+const fieldNames = {
+  username: 'username',
+  email: 'email',
+  password: 'password',
+};
 
 function SignUp() {
   const dispatch = useDispatch();
 
   return (
     <>
-      <Typography component='h1' variant='h5'>
+      <Typography variant='h4'>
         Sign up
       </Typography>
       <Box mt={3}>
-        <Formik
+        <SmartForm
+          submitText='Sign up'
           initialValues={{
-            username: '', email: '', password: ''
+            [fieldNames.username]: '', [fieldNames.email]: '', [fieldNames.password]: ''
           }}
-          validationSchema={object({
-            username: string()
-              .required(validationMessages.required)
-              .max(50, validationMessages.maxLength),
-            email: string()
-              .email(validationMessages.email)
-              .required(validationMessages.required),
-            password: string()
-              .required(validationMessages.required)
-              .max(100, validationMessages.maxLength)
-          })}
-          onSubmit={(values, { setSubmitting, setErrors }) => {
-            setSubmitting(true);
-            ws
-              .request(ACTIONS.signUp, values)
-              .then(({ payload }) => dispatch(signIn(payload.token)))
-              .catch(e => {
-                const errorsObj = mapValues(e.payload, v => v.join('; '));
-                setErrors(errorsObj);
-              })
-              .finally(() => setSubmitting(false))
+          validationConfig={{
+            [fieldNames.username]: [FIELD_TYPES.text, 50, true],
+            [fieldNames.email]: [FIELD_TYPES.email, null, true],
+            [fieldNames.password]: [FIELD_TYPES.text, 100, true]
           }}
+          onSubmit={(values, formikHelpers) => finishSubmit(
+            ws.request(ACTIONS.signUp, values).then(({ payload }) =>
+              dispatch(signIn(payload.token))
+            ), formikHelpers
+          )}
         >
-          <Form>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Field
-                  component={TextField}
-                  required
-                  fullWidth
-                  label='Username'
-                  name='username'
-                  autoComplete='username'
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Field
-                  component={TextField}
-                  required
-                  fullWidth
-                  label='Email Address'
-                  name='email'
-                  autoComplete='email'
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <PasswordField
-                  required
-                  fullWidth
-                  name='password'
-                  label='Password'
-                  type='password'
-                  autoComplete='new-password'
-                />
-              </Grid>
-            </Grid>
-            <SubmitButton
-              fullWidth
-              variant='contained'
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Sign Up
-            </SubmitButton>
-          </Form>
-        </Formik>
-        <Grid container justifyContent='flex-end'>
-          <Grid item>
-            <StyledLink to={links.signIn.path} variant='body2'>
-              Already have an account? Sign in
-            </StyledLink>
-          </Grid>
-        </Grid>
+          <StandardTextField required name={fieldNames.username} />
+          <StandardTextField required name={fieldNames.email} />
+          <PasswordField required name={fieldNames.password} autoComplete='new-password' />
+        </SmartForm>
+        <Box justifyContent='flex-end' display='flex' alignItems='center'>
+          <StyledLink to={links.signIn.path} variant='body2'>
+            Already have an account? Sign in
+          </StyledLink>
+        </Box>
       </Box>
-    </>);
+    </>
+  );
 }
 
 export default SignUp;

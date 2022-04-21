@@ -1,5 +1,4 @@
 import { decode, encode } from './transformers';
-import { omitBy } from 'lodash';
 
 
 class WsWithQueue extends WebSocket {
@@ -12,7 +11,11 @@ class WsWithQueue extends WebSocket {
 
     this.addEventListener('open', async () => {
       for (const enqueued of this.queue) {
-        await this.sendMessage(...enqueued);
+        if (enqueued instanceof Blob) {
+          await this.sendStreamChunk(enqueued);
+        } else {
+          await this.sendMessage(...enqueued);
+        }
       }
     });
 
@@ -22,6 +25,21 @@ class WsWithQueue extends WebSocket {
         this.dispatchEvent(new CustomEvent(action, { detail: { payload, status } }));
       }
     });
+  }
+
+  /**
+   *
+   * @param {Blob} chunk
+   * @return {Promise<void>}
+   */
+  async sendStreamChunk(chunk) {
+    if (this.readyState !== this.OPEN) {
+      this.queue.push(chunk);
+      return;
+    }
+
+    const toSend = await encode(chunk);
+    return this.send(toSend);
   }
 
   async sendMessage(action, payload) {
@@ -35,15 +53,14 @@ class WsWithQueue extends WebSocket {
   }
 
   async request(action, payload) {
-    const responsePromise = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.addEventListener(action, ({ detail }) => {
         const fn = detail.status > WsWithQueue.OK_THRESHOLD ? reject : resolve;
         fn(detail);
       }, { once: true });
-    });
-    await this.sendMessage(action, payload);
 
-    return responsePromise;
+      this.sendMessage(action, payload);
+    });
   }
 
   subscribe(actionName, handler) {

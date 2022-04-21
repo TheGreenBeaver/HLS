@@ -7,6 +7,7 @@ const account = {
 const general = {
   SET_ERROR: 'SET_ERROR',
   SET_PROFILE_MODAL_STATE: 'SET_PROFILE_MODAL_STATE',
+  ENQUEUE_ALERT: 'ENQUEUE_ALERT',
 };
 
 export {

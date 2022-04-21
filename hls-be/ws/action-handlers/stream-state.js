@@ -1,23 +1,26 @@
-const path = require('path');
-const fs = require('fs');
-const { TEMP_DIR, TEMP_EXT, NON_FIELD_ERR, STREAMS_DIR } = require('../../settings');
-const { now } = require('lodash');
+const { NON_FIELD_ERR, TEMP_EXT } = require('../../settings');
 const log = require('../../util/logger');
 const httpStatus = require('http-status');
-const { ACTIONS } = require('../constants');
-const { composeMediaPath } = require('../../util/misc');
-const { getLiveStreamProc } = require('../../ffmpeg');
+const { ACTIONS, ACK_ABLE } = require('../constants');
+const { prepareTempFiles, prepareThumbnail } = require('./_video-utils');
+const { CONTENT_KINDS } = require('../../util/misc');
+const { serializeVideo } = require('../../serializers/videos');
+const fs = require('fs');
+const { VIDEO_BASIC } = require('../../util/query-options');
 
 /**
  *
- * @param {Object} payload
+ * @param {object} payload
  * @param {ObsWebSocket} wsRef
  * @param {function(data: Object): Promise<void>} respond
  * @return {Promise<any>}
  */
 async function startStream(payload, { wsRef, respond }) {
-  const theUser = wsRef.user;
-  const userIsLive = wsRef.wsServerRef.openClients.some(client => client.user.id === theUser.id && client.isLive);
+  const { name: videoName, description, thumbnail: providedThumbnail, plan } = payload;
+  const theUser = wsRef.userAccessLogic.user;
+  const userIsLive = wsRef.wsServerRef.openClients.some(client =>
+    client.userAccessLogic.matches(theUser) && client.streamStateTracker.isLive
+  );
   if (userIsLive) {
     return respond({
       status: httpStatus.CONFLICT,
@@ -25,48 +28,26 @@ async function startStream(payload, { wsRef, respond }) {
     });
   }
 
-  const tempDir = path.join(TEMP_DIR, `user-${theUser.id}`);
-  await fs.promises.mkdir(tempDir, { recursive: true });
-  const tempFileName = path.join(tempDir, `${now()}${TEMP_EXT}`);
-
-  const streamDir = path.join(STREAMS_DIR, `user-${theUser.id}`, `live-stream-${now()}`);
-  await fs.promises.mkdir(streamDir, { recursive: true });
-
-  wsRef.streamCollectorFile = await fs.promises.open(tempFileName, 'a');
-  const { proc, masterFileName } = await getLiveStreamProc(tempFileName, streamDir);
-  wsRef.streamTransformerProc = proc;
-
-  wsRef.streamTransformerProc.on('error', async err => {
-    log(log.levels.error, `Error processing stream from User#${theUser.id}: ${err.message}`);
-    await wsRef.finishLiveStream();
-    await wsRef.wsServerRef.broadcast(
-      client => Promise.resolve({
-        status: httpStatus.INTERNAL_SERVER_ERROR,
-        action: ACTIONS.streamEndAck,
-        payload: {
-          [NON_FIELD_ERR]: [
-            client === wsRef ? 'Encountered a fatal error while processing your stream' : 'The stream has crashed'
-          ]
-          // TODO: Continue the same stream
-        }
-      }),
-      client => Promise.resolve(client === wsRef || subscribers.includes(client.user))
-    );
+  const { tempFileName, resultDir, tempDir } = await prepareTempFiles(theUser, TEMP_EXT, CONTENT_KINDS.liveStream);
+  const thumbnailLocation = await prepareThumbnail(tempFileName, resultDir, tempDir, providedThumbnail);
+  const newVideo = await theUser.createVideo({
+    isStream: true,
+    name: videoName,
+    thumbnail: thumbnailLocation,
+    description,
+    plan
   });
+  await newVideo.reload({ ...VIDEO_BASIC });
 
-  const subscribers = await theUser.getSubscribers();
-  await wsRef.wsServerRef.broadcast(
-    client => {
-      const data = { action: ACTIONS.streamStartAck };
-      if (client !== wsRef) {
-        data.payload = { streamer: theUser, streamLocation: composeMediaPath(masterFileName) };
-      }
-      return Promise.resolve(data);
-    },
-    client => Promise.resolve(client === wsRef || subscribers.includes(client.user))
-  );
+  await wsRef.streamStateTracker.startLiveStream(tempFileName, newVideo.id, resultDir, plan);
 
-  log(log.levels.info, `User#${theUser.id} has started a stream`);
+  log(log.levels.info, `User#${theUser.id} has ${
+    plan
+      ? `planned a stream for ${plan.toISOString()}`
+      : 'started a stream'
+  }`);
+
+  return respond({ status: httpStatus.CREATED, payload: serializeVideo(newVideo) });
 }
 
 /**
@@ -77,25 +58,53 @@ async function startStream(payload, { wsRef, respond }) {
  * @return {Promise<void>}
  */
 async function endStream(payload, { wsRef, respond }) {
-  const theUser = wsRef.user;
-  await wsRef.finishLiveStream();
+  const theUser = wsRef.userAccessLogic.user;
+
+  await respond({ status: httpStatus.ACCEPTED });
+  log(log.levels.info, `User#${theUser.id} has ended the stream`);
+
+  const dbRecord = await wsRef.streamStateTracker.finishLiveStream(payload.streamedDuration);
+  log(log.levels.info, `Finished processing User#${theUser.id}'s last stream`);
 
   const subscribers = await theUser.getSubscribers();
   await wsRef.wsServerRef.broadcast(
-    client => {
-      const data = { action: ACTIONS.streamEndAck };
-      if (client !== wsRef) {
-        data.payload = { streamer: theUser };
-      }
-      return Promise.resolve(data);
-    },
-    client => Promise.resolve(client === wsRef || subscribers.includes(client.user))
+    () => Promise.resolve({
+      action: ACTIONS.streamStateAck,
+      payload: { video: serializeVideo(dbRecord), state: ACK_ABLE.gracefullyEnded }
+    }),
+    client => Promise.resolve(subscribers.includes(client.userAccessLogic.user))
   );
+}
 
-  log(log.levels.info, `User#${wsRef.user.id} has ended the stream`);
-
+/**
+ *
+ * @param {Object} payload
+ * @param {ObsWebSocket} wsRef
+ * @param {function(data: Object): Promise<void>} respond
+ * @return {Promise<void>}
+ */
+async function confirmPlan(payload, { wsRef, respond }) {
+  const theUser = wsRef.userAccessLogic.user;
+  const { willStream, id } = payload;
+  const theStream = (await theUser.getVideos({ where: { id } }))[0];
+  if (willStream) {
+    const { tempFileName, resultDir } = await prepareTempFiles(theUser, TEMP_EXT, CONTENT_KINDS.liveStream);
+    await wsRef.streamStateTracker.startLiveStream(tempFileName, theStream.id, resultDir);
+    log(log.levels.info, `User#${theUser.id} has started a planned stream`);
+  } else {
+    const subscribers = await theUser.getSubscribers();
+    await wsRef.wsServerRef.broadcast(
+      () => Promise.resolve({
+        action: ACTIONS.streamStateAck,
+        payload: { video: serializeVideo(theStream), state: ACK_ABLE.cancelled }
+      }),
+      client => Promise.resolve(subscribers.includes(client.userAccessLogic.user))
+    );
+    await theStream.destroy();
+  }
+  return respond({ status: httpStatus.ACCEPTED, payload: { willStream } });
 }
 
 module.exports = {
-  startStream, endStream
+  startStream, endStream, confirmPlan
 };

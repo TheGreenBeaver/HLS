@@ -1,5 +1,5 @@
 const childProcess = require('child_process');
-const { isInteger } = require('lodash');
+const { isInteger, takeRight } = require('lodash');
 
 
 const ASPECT_RATIO = { w: 16, h: 9 };
@@ -33,15 +33,16 @@ async function discoverDimensions(filePath) {
   });
 }
 
-async function getAchievableResolutions(filePath) {
+async function getAchievableResolutions(filePath, onlyNBest) {
   const [originalW, originalH] = await discoverDimensions(filePath);
-  return SUPPORTED_RESOLUTIONS.filter(([w, h]) => w <= originalW || h <= originalH);
+  const allAchievable = SUPPORTED_RESOLUTIONS.filter(([w, h]) => w <= originalW || h <= originalH);
+  return onlyNBest ? takeRight(allAchievable, onlyNBest) : allAchievable;
 }
 
 const SCALING_SETTINGS = [
   {
     scale: (w, h) => `${w}:${h}`,
-    force_original_aspect_ratio: 'decrease'
+    force_original_aspect_ratio: 'decrease',
   },
   {
     setsar: '1:1'

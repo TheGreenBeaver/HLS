@@ -9,15 +9,6 @@ function useUserState() {
   };
 }
 
-function useIsReady() {
-  const { userData, isAuthorized } = useSelector(state => state.account);
-  return isAuthorized && !!userData;
-}
-
-function useIsAuthorized() {
-  return useSelector(state => state.account.isAuthorized);
-}
-
 function useUserData() {
   return useSelector(state => state.account.userData);
 }
@@ -31,5 +22,5 @@ function useProfileModalOpen() {
 }
 
 export {
-  useUserState, useErr, useUserData, useProfileModalOpen, useIsAuthorized, useIsReady
+  useUserState, useErr, useUserData, useProfileModalOpen
 };

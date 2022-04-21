@@ -1,12 +1,15 @@
 import React from 'react';
-import { CenterBox } from '../../../components/layout';
+import { CenterBox } from '../../../ui-kit/layout';
 import Typography from '@mui/material/Typography';
 
 
 function NotVerified() {
+  // TODO: resend
   return (
-    <CenterBox height='100vh'>
-      <Typography>Please verify your email address to proceed</Typography>
+    <CenterBox flex={1}>
+      <Typography>
+        We've sent an email to the address you provided. Please follow the link in the letter to verify your account.
+      </Typography>
     </CenterBox>
   );
 }

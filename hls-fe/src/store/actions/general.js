@@ -17,7 +17,13 @@ const closeProfileModal = () => setProfileModalState(false);
 
 const clearError = () => setError(null);
 
+const enqueueAlert = alert => ({
+  type: general.ENQUEUE_ALERT,
+  alert
+});
+
 export {
   setError, clearError,
-  setProfileModalState, openProfileModal, closeProfileModal
+  setProfileModalState, openProfileModal, closeProfileModal,
+  enqueueAlert
 };

@@ -3,7 +3,7 @@ const { encode, decode } = require('../transformers');
 const httpStatus = require('http-status');
 const log = require('../../util/logger');
 const { EVENTS } = require('../constants');
-const { ValidationError: SqlValidationError, UniqueConstraintError } = require('sequelize');
+const { ValidationError: SqlValidationError, UniqueConstraintError, EmptyResultError } = require('sequelize');
 const { ValidationError: YupValidationError } = require('yup');
 const { isDev } = require('../../util/env');
 const { set } = require('lodash');
@@ -41,7 +41,7 @@ class ObsWebSocket extends WebSocket {
           await validator.validate(payload, { abortEarly: false, strict: true });
           await handle(payload, { wsRef: this, respond });
         } catch (err) {
-          await respond(this.getErrorResponse(err));
+          await respond(this.#getErrorResponse(err));
         }
       }
     });
@@ -52,7 +52,7 @@ class ObsWebSocket extends WebSocket {
    * @param {Error} err
    * @return {Object}
    */
-  getErrorResponse(err) {
+  #getErrorResponse(err) {
     if (isDev) {
       // Printing the error as it is to find its origin in the code
       console.log(err);
@@ -79,6 +79,8 @@ class ObsWebSocket extends WebSocket {
         .replace('_key', '');
       const failedModel = Object.entries(models).find(([, model]) => model.getTableName() === parent.table)[0];
       payload = { [failedUnique]: [`${failedModel} with such ${failedUnique} already exists`] };
+    } else if (err instanceof EmptyResultError) {
+      return { status: httpStatus.NOT_FOUND };
     }
 
     return payload

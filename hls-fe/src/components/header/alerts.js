@@ -53,6 +53,10 @@ const ACTIONS_REP_LOGIC = {
   })
 };
 
+function getProps(to) {
+  return to ? { component: Link, to } : {};
+}
+
 function Alerts() {
   const showAlert = useAlert();
   const [ntfList, setNtfList] = useState([]);
@@ -88,15 +92,13 @@ function Alerts() {
         <MenuItem
           onMouseEnter={() => seeNtf(idx)}
           sx={{
-            boxShadow: theme => {
-              const colour = theme.palette.secondary.light;
-              return ntf.seen
-                ? undefined
-                : `${colour} 0px 7px 8px -4px inset, ${colour} 0px 12px 17px 2px inset, ${colour} 0px 5px 22px 4px inset`
-            }
+            bgcolor: !ntf.seen ? 'secondary.light' : undefined,
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            display: 'block'
           }}
-          component={Link}
-          to={ntf.to}
+          {...getProps(ntf.to)}
           key={idx}
           onClick={closeMenu}
         >

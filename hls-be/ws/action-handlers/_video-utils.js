@@ -9,23 +9,23 @@ const { Op } = require('sequelize');
 
 const OPTIONS = {
   [CONTENT_KINDS.liveStream]: {
-    mainFilePrefix: 'live-stream',
+    prefix: 'live-stream',
     baseResultDir: STREAMS_DIR
   },
   [CONTENT_KINDS.video]: {
-    mainFilePrefix: 'video',
+    prefix: 'video',
     baseResultDir: VIDEOS_DIR
   }
 }
 
 async function prepareTempFiles(user, ext, contentKind) {
-  const { mainFilePrefix, baseResultDir } = OPTIONS[contentKind];
+  const { prefix, baseResultDir } = OPTIONS[contentKind];
 
   const tempDir = path.join(TEMP_DIR, `user-${user.id}`);
   await fs.promises.mkdir(tempDir, { recursive: true });
   const tempFileName = path.join(tempDir, `${now()}${ext}`);
 
-  const resultDir = path.join(baseResultDir, `user-${user.id}`, `${mainFilePrefix}-${now()}`);
+  const resultDir = path.join(baseResultDir, `user-${user.id}`, `${prefix}-${now()}`);
   await fs.promises.mkdir(resultDir, { recursive: true });
 
   return { tempFileName, resultDir, tempDir };

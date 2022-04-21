@@ -5,7 +5,6 @@ const { ACTIONS, ACK_ABLE } = require('../constants');
 const { prepareTempFiles, prepareThumbnail } = require('./_video-utils');
 const { CONTENT_KINDS } = require('../../util/misc');
 const { serializeVideo } = require('../../serializers/videos');
-const fs = require('fs');
 const { VIDEO_BASIC } = require('../../util/query-options');
 
 /**

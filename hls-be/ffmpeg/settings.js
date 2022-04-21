@@ -55,9 +55,10 @@ const ENCODING_SETTINGS = {
   [CONTENT_KINDS.liveStream]: {
     [BLOCKS.video]: {
       'c:v': 'libx264', // codec
-      crf: 30, // quality (1 - best, 51 - worst, 28 is at the bottom of the recommended "sane range")
+      crf: 28, // quality (1 - best, 51 - worst, 28 is at the bottom of the recommended "sane range")
       preset: 'ultrafast',
-      tune: 'zerolatency'
+      tune: 'zerolatency',
+      sc_threshold: 0, // more precise scene detection
     },
 
     [BLOCKS.audio]: {
@@ -67,13 +68,12 @@ const ENCODING_SETTINGS = {
     },
 
     [BLOCKS.general]: {
+      fps: 15,
       f: 'hls', // format
       hls_time: HLS_SEGMENT_DUR, // duration of a fragment in seconds
       hls_playlist_type: 'event', // save all fragments
       hls_flags: 'independent_segments',
       hls_segment_type: 'mpegts',
-      refs: 2,
-      bufsize: '256k'
     }
   }
 };

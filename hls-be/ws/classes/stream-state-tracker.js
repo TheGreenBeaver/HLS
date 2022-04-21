@@ -28,20 +28,26 @@ class ChunksQueue {
   #tick() {
     if (isEmpty(this.#queue)) {
       if (typeof this.#onFinish === 'function') {
+        log(log.levels.info, 'Queue empty');
         this.#onFinish(() => { this.#onFinish = null; });
       }
       return;
     }
 
     if (this.#writing) {
+      log(log.levels.debug, `${this.#queue.length} chunks waiting in queue`);
       return;
     }
 
-    const nextChunk = Buffer.concat([...this.#queue]);
-    this.#queue = [];
+    const nextChunk = this.#queue.pop();
     this.#writing = true;
     this.#inp.write(nextChunk, writeErr => {
-      log(log.levels.error, `Error writing to FFMPEG stdin: ${writeErr.message || writeErr.code}`);
+      if (writeErr) {
+        log(log.levels.error, `Error writing to FFMPEG stdin: ${writeErr.message || writeErr.code}`);
+      } else {
+        log(log.levels.debug, 'Read next chunk');
+      }
+
       this.#writing = false;
       this.#tick();
     });

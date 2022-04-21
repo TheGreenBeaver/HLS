@@ -5,7 +5,7 @@ const path = require('path');
 const Sequelize = require('sequelize');
 const { getFileIsUsable } = require('../util/misc');
 const { getEnv } = require('../util/env');
-const allConfigs = require(__dirname + '/../config/config.json')
+const allConfigs = require(__dirname + '/../config/config')
 
 
 const env = getEnv();

@@ -12,7 +12,7 @@ function getVar(name, defaultVal = '') {
 }
 
 function getEnv() {
-  return getVar('ENVIRONMENT', ENVS.dev);
+  return getVar('NODE_ENV', ENVS.dev);
 }
 
 const isOnWindows = process.platform === 'win32';

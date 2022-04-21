@@ -1,0 +1,7 @@
+node_modules
+.idea
+.env
+media
+_temp_
+README.md
+dev-static-server.js

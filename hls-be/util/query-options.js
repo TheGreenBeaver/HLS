@@ -16,6 +16,7 @@ const USER_OTHER = {
   include: [{
     model: User,
     as: 'subscribers',
+    attributes: ['id'],
     through: { attributes: [] }
   }]
 };

@@ -40,7 +40,7 @@ function SingleChannel() {
       <SearchBar section={SECTIONS.single} />
 
       <Box display='flex' columnGap={3}>
-        <UserEntity data={userData} />
+        <UserEntity data={userData} large />
         {
           currentUserData && currentUserData.id !== userData.id && !userData.isSubscribed &&
           <Button

@@ -1,7 +1,7 @@
 const { omit } = require('lodash');
 const { composeMediaPath } = require('../util/misc');
 
-function serializeUser(user) {
+function serializeUser(user, currentUser) {
   const serialized = {
     ...omit(user.dataValues, ['password', 'newPassword', 'subscribers']),
     avatar: composeMediaPath(user.avatar),
@@ -10,7 +10,10 @@ function serializeUser(user) {
     serialized.passwordChangeRequested = !!user.newPassword;
   }
   if ('subscribers' in user) {
-    serialized.isSubscribed = !!user.subscribers.length;
+    serialized.subscribersAmount = user.subscribers.length;
+    if (currentUser) {
+      serialized.isSubscribed = user.subscribers.includes(currentUser.id);
+    }
   }
 
   return serialized;

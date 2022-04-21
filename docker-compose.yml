@@ -33,7 +33,7 @@ services:
       - "80:${EXTERNAL_HTTP_PORT}"
       - "81:${EXTERNAL_HTTPS_PORT}"
     volumes:
-      - media-volume:/usr/share/nginx/share/media
+      - media-volume:/usr/share/nginx/media
 
 volumes:
   media-volume:

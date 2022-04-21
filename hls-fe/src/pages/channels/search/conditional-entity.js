@@ -11,7 +11,7 @@ const KINDS = {
 
 function ConditionalEntity({ data: { kind, mainData } }) {
   const TheEntity = kind === KINDS.user ? UserEntity : VideoEntity;
-  return <TheEntity data={mainData}/>
+  return <TheEntity data={mainData} large={kind === KINDS.video} />;
 }
 
 ConditionalEntity.propTypes = {

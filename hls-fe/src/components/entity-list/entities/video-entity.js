@@ -1,5 +1,5 @@
 import React from 'react';
-import { object } from 'prop-types';
+import { bool, object } from 'prop-types';
 import { Link } from 'react-router-dom';
 import { links } from '../../../pages/routing';
 import Box from '@mui/material/Box';
@@ -22,11 +22,14 @@ function getTimingText({ isLiveNow, plan, createdAt, location, isStream }) {
   return `${isStream ? 'Streamed ' : ''}${DateTime.fromISO(createdAt).toRelative()}`
 }
 
-function VideoEntity({ data }) {
+function VideoEntity({ data, large }) {
+  const gridProps = large ? { xs: 12 } : { xs: 2, sm: 4, lg: 3 };
+  const imgProps = large ? { height: 220, width: 'auto' } : { height: 'auto', width: '100%' };
+  const boxProps = large ? { display: 'flex', columnGap: 2 } : { display: 'block' };
   return (
-    <Grid item xs={2} sm={4} lg={3}>
-      <Link to={links.videos.single.get(data.id)}>
-        <img src={data.thumbnail} alt={data.name} height='auto' width='100%' />
+    <Grid item {...gridProps}>
+      <Box component={Link} to={links.videos.single.get(data.id)} {...boxProps}>
+        <img src={data.thumbnail} alt={data.name} {...imgProps} />
         <Box display='flex' columnGap={1}>
           <Avatar src={data.author.avatar}>
             {data.author.username[0]}
@@ -46,13 +49,14 @@ function VideoEntity({ data }) {
             </Box>
           </Box>
         </Box>
-      </Link>
+      </Box>
     </Grid>
   );
 }
 
 VideoEntity.propTypes = {
-  data: object.isRequired
+  data: object.isRequired,
+  large: bool
 };
 
 export default VideoEntity;

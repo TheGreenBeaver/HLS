@@ -1,6 +1,6 @@
 const { User, Video } = require('../../models');
 const { Op } = require('sequelize');
-const { USER_PUBLIC, VIDEO_BASIC } = require('../../util/query-options');
+const { VIDEO_BASIC, USER_OTHER } = require('../../util/query-options');
 const { makeWhereClause } = require('./_video-utils');
 const { SEARCHABLE } = require('../constants');
 const httpStatus = require('http-status');
@@ -25,9 +25,9 @@ async function search(payload, { respond, wsRef }) {
 
   if (searchFor === SEARCHABLE.user || !searchFor) {
     const whereUsers = { username: like };
-    const matchingUsers = await User.findAll({ where: whereUsers, ...USER_PUBLIC });
+    const matchingUsers = await User.findAll({ where: whereUsers, ...USER_OTHER });
     allResults.push(...matchingUsers.map(u => ({
-      mainData: serializeUser(u), kind: SEARCHABLE.user
+      mainData: serializeUser(u, wsRef.userAccessLogic.user), kind: SEARCHABLE.user
     })));
   }
 

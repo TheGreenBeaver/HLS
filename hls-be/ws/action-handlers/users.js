@@ -5,6 +5,7 @@ const { NON_FIELD_ERR, AVATARS_DIR } = require('../../settings');
 const httpStatus = require('http-status');
 const { getHost } = require('../../util/misc');
 const sendMail = require('../../mail');
+const templates = require('../../mail/templates');
 const { ACTIONS, CONFIRMABLE } = require('../constants');
 const fs = require('fs');
 const path = require('path');
@@ -17,6 +18,7 @@ const CONFIRM = {
   [CONFIRMABLE.verify]: {
     action: 'verify',
     field: 'isVerified',
+    subject: 'inSight: account verification',
     applyChangesAndGetValue: user => {
       user.isVerified = true;
       return true;
@@ -25,6 +27,7 @@ const CONFIRM = {
   [CONFIRMABLE.changePassword]: {
     action: 'change_password',
     field: 'passwordChangeRequested',
+    subject: 'inSight: password changed',
     applyChangesAndGetValue: user => {
       user.password = user.newPassword;
       user.newPassword = null;
@@ -35,6 +38,7 @@ const CONFIRM = {
   [CONFIRMABLE.resetPassword]: {
     action: 'reset_password',
     field: 'passwordChangeRequested',
+    subject: 'inSight: password reset',
     applyChangesAndGetValue: (user, wsRef) => {
       wsRef.wsServerRef.openClients.forEach(client => {
         if (client.userAccessLogic.matches(user)) {
@@ -51,10 +55,11 @@ const CONFIRM = {
   }
 };
 
-async function sendConfirmationLink(confirmedAction, user, fields = CRYPTO_FIELDS) {
+async function sendConfirmationLink(confirmed, user, fields = CRYPTO_FIELDS) {
+  const { action, subject } = CONFIRM[CONFIRMABLE.verify];
   const verificationToken = generateToken(user, fields);
-  const link = `${getHost()}/confirm/${confirmedAction}/${getB36(user.id)}/${verificationToken}`;
-  await sendMail(link, user.email);
+  const link = `${getHost()}/confirm/${action}/${getB36(user.id)}/${verificationToken}`;
+  await sendMail({ subject, html: templates[confirmed](link) }, user.email);
 }
 
 /**
@@ -99,7 +104,7 @@ async function signUp(payload, { wsRef, respond }) {
   newUser.setDataValue('password', encryptedPassword);
 
   const savedUser = await newUser.save();
-  await sendConfirmationLink(CONFIRM.verify.action, savedUser);
+  await sendConfirmationLink(CONFIRMABLE.verify, savedUser);
   return wsRef.userAccessLogic.logIn(savedUser, ACTIONS.signUp);
 }
 
@@ -130,7 +135,7 @@ async function editUser(payload, { wsRef, respond }) {
 
   if (newPassword) {
     theUser.newPassword = hash(newPassword);
-    await sendConfirmationLink(CONFIRM.changePassword.action, theUser);
+    await sendConfirmationLink(CONFIRMABLE.changePassword, theUser);
   }
 
   await theUser.save();
@@ -166,7 +171,7 @@ async function resetPassword(payload, { wsRef, respond }) {
 
   theUser.newPassword = hash(newPassword);
   await theUser.save();
-  await sendConfirmationLink(CONFIRM.resetPassword.action, theUser);
+  await sendConfirmationLink(CONFIRMABLE.resetPassword, theUser);
   return respond({ status: httpStatus.NO_CONTENT });
 }
 
@@ -179,6 +184,12 @@ async function resetPassword(payload, { wsRef, respond }) {
  */
 async function subscribe(payload, { wsRef, respond }) {
   const { id } = payload;
+  if (id === wsRef.userAccessLogic.user.id) {
+    return respond({
+      status: httpStatus.BAD_REQUEST,
+      payload: { id: ['Can not subscribe to yourself'] }
+    });
+  }
   let contentMaker;
   try {
     contentMaker = await User.findByPk(id, { ...USER_PUBLIC, rejectOnEmpty: true });
@@ -190,7 +201,7 @@ async function subscribe(payload, { wsRef, respond }) {
   }
 
   await wsRef.userAccessLogic.user.addSubscribedTo(contentMaker);
-  return respond({ payload: serializeUser(contentMaker) });
+  return respond({ status: httpStatus.NO_CONTENT });
 }
 
 /**
@@ -214,11 +225,9 @@ async function listChannels(_, { wsRef, respond }) {
  * @return {Promise<void>}
  */
 async function retrieveUser(payload, { wsRef, respond }) {
-  const opts = wsRef.userAccessLogic.isAuthorized
-    ? { where: { '$subscribers.id$': wsRef.userAccessLogic.user.id }, ...USER_OTHER }
-    : USER_PUBLIC;
+  const opts = wsRef.userAccessLogic.isAuthorized ? USER_OTHER : USER_PUBLIC;
   const u = await User.findByPk(payload.id, { ...opts, rejectOnEmpty: true });
-  return respond({ payload: serializeUser(u) });
+  return respond({ payload: serializeUser(u, wsRef.userAccessLogic.user) });
 }
 
 module.exports = {

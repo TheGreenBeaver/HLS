@@ -84,7 +84,7 @@ function useAlert() {
         <Box display='flex' alignItems='center'>
           {!!Extra && <Extra onClick={() => closeSnackbar(key)} />}
           <IconButton onClick={() => closeSnackbar(key)}>
-            <Close sx={{ color: `${variant}.dark` }} />
+            <Close sx={{ color: `${variant}.contrastText` }} />
           </IconButton>
         </Box>
     });

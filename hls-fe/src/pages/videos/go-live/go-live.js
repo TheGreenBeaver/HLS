@@ -7,7 +7,7 @@ import ACTIONS from '../../../ws/actions';
 import { FIELD_TYPES } from '../../../ui-kit/form-builder/util/validation';
 import { Photo, Upload } from '@mui/icons-material';
 import StandardTextField from '../../../ui-kit/form-builder/fields/standard-text-field';
-import { mapValues, now } from 'lodash';
+import { now } from 'lodash';
 import { UNITS } from '../../../util/misc';
 import { useHistory, useLocation } from 'react-router-dom';
 import { links } from '../routing';
@@ -21,6 +21,7 @@ import { Form } from 'formik';
 import fieldNames from './field-names';
 import GoButton from './go-button';
 import { useAlert } from '../../../util/hooks';
+import finishSubmit from '../../../ui-kit/form-builder/util/finish-submit';
 
 
 function PreLive({ startedAtRef, setIsLive, setLiveStreamId }) {
@@ -36,22 +37,16 @@ function PreLive({ startedAtRef, setIsLive, setLiveStreamId }) {
           if (toSend[fieldNames.plan] == null) {
             delete toSend[fieldNames.plan];
           }
-          formikHelpers.setSubmitting(true);
-          ws
-            .request(ACTIONS.startStream, toSend)
-            .then(({ payload }) => {
+          finishSubmit(
+            ws.request(ACTIONS.startStream, toSend).then(({ payload }) => {
               if (payload.plan) {
                 history.push(links.single.get(payload.id));
               } else {
-                setIsLive(true);
                 setLiveStreamId(payload.id);
+                setIsLive(true);
               }
-            })
-            .catch(e => {
-              const errorsObj = mapValues(e.payload, v => v.join('; '));
-              formikHelpers.setErrors(errorsObj);
-              formikHelpers.setSubmitting(false);
-            });
+            }), formikHelpers
+          );
         }}
         initialValues={{
           [fieldNames.thumbnail]: null,

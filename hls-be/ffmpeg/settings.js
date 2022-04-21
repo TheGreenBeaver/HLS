@@ -1,8 +1,7 @@
 const path = require('path');
-const { mapValues } = require('lodash');
-const { getAchievableResolutions, composeScalingArgs } = require('./resolutions');
+const { mapValues, takeRight } = require('lodash');
+const { getAchievableResolutions, composeScalingArgs, SUPPORTED_RESOLUTIONS } = require('./resolutions');
 const { CONTENT_KINDS } = require('../util/misc');
-const { HLS_SEGMENT_DUR } = require('../settings');
 
 // --- --- ENUMS --- --- //
 const BLOCKS = {
@@ -17,6 +16,7 @@ const SPLITTING_TYPES = {
 };
 
 // --- --- SETTINGS --- --- //
+const N_BEST = 3;
 const HOW_TO_SPLIT = {
   [BLOCKS.audio]: SPLITTING_TYPES.sameForEach,
   [BLOCKS.video]: SPLITTING_TYPES.full,
@@ -45,7 +45,7 @@ const ENCODING_SETTINGS = {
 
     [BLOCKS.general]: {
       f: 'hls', // format
-      hls_time: HLS_SEGMENT_DUR, // duration of a fragment in seconds
+      hls_time: 4, // duration of a fragment in seconds
       hls_playlist_type: 'vod',
       hls_flags: 'independent_segments',
       hls_segment_type: 'mpegts',
@@ -55,25 +55,24 @@ const ENCODING_SETTINGS = {
   [CONTENT_KINDS.liveStream]: {
     [BLOCKS.video]: {
       'c:v': 'libx264', // codec
-      crf: 30, // quality (1 - best, 51 - worst, 28 is at the bottom of the recommended "sane range")
+      crf: 28, // quality (1 - best, 51 - worst, 28 is at the bottom of the recommended "sane range")
       preset: 'ultrafast',
-      tune: 'zerolatency'
+      tune: 'zerolatency',
+      sc_threshold: 0, // more precise scene detection
     },
 
     [BLOCKS.audio]: {
       'c:a': 'copy', // codec
-      'b:a': '128k', // bitrate
+      // 'b:a': '128k', // bitrate
       ac: 2 // audio channels amt
     },
 
     [BLOCKS.general]: {
       f: 'hls', // format
-      hls_time: HLS_SEGMENT_DUR, // duration of a fragment in seconds
+      hls_time: 4, // duration of a fragment in seconds
       hls_playlist_type: 'event', // save all fragments
       hls_flags: 'independent_segments',
       hls_segment_type: 'mpegts',
-      refs: 2,
-      bufsize: '256k'
     }
   }
 };
@@ -116,14 +115,18 @@ function composeDirIndependentArgs(resolutionsAmt, kind) {
     .flat(2);
 }
 
-async function composeArgs(inpFile, outDir, kind) {
-  const achievableResolutions = await getAchievableResolutions(inpFile, kind === CONTENT_KINDS.liveStream ? 3 : null);
+async function composeArgs(outDir, kind, inpFile) {
+  const indefinite = !inpFile;
+
+  const achievableResolutions = indefinite
+    ? takeRight(SUPPORTED_RESOLUTIONS, N_BEST)
+    : await getAchievableResolutions(inpFile);
   const resolutionsAmt = achievableResolutions.length;
 
   const streamNames = achievableResolutions.map((_, streamIdx) => `[v${streamIdx + 1}]`).join('');
   const splitDefinition = `${resolutionsAmt}${streamNames}`;
   const streamScales = achievableResolutions
-    .map(([w, h], streamIdx) => `[v${streamIdx + 1}]${composeScalingArgs(w, h)}[v${streamIdx + 1}out]`)
+    .map(([w, h], streamIdx) => `[v${streamIdx + 1}]${composeScalingArgs(w, h, indefinite)}[v${streamIdx + 1}out]`)
     .join('; ');
   const splittingCommand = `-filter_complex "[0:v]split=${splitDefinition}; ${streamScales}"`;
 
@@ -133,8 +136,9 @@ async function composeArgs(inpFile, outDir, kind) {
   const dirIndependentArgs = composeDirIndependentArgs(resolutionsAmt, kind);
   const { segment, index, master } = getFilenames(outDir);
 
+  const inpArg = indefinite ? '-i -' : `-i "${inpFile}"`;
   const args = [
-    `-i "${inpFile}"`,
+    inpArg,
     splittingCommand,
     ...dirIndependentArgs,
     `-hls_segment_filename "${segment}"`,

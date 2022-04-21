@@ -9,38 +9,37 @@ const { Op } = require('sequelize');
 
 const OPTIONS = {
   [CONTENT_KINDS.liveStream]: {
-    mainFilePrefix: 'live-stream',
+    prefix: 'live-stream',
     baseResultDir: STREAMS_DIR
   },
   [CONTENT_KINDS.video]: {
-    mainFilePrefix: 'video',
+    prefix: 'video',
     baseResultDir: VIDEOS_DIR
   }
 }
 
-async function prepareTempFiles(user, ext, contentKind) {
-  const { mainFilePrefix, baseResultDir } = OPTIONS[contentKind];
+async function prepareDirs(user, contentKind) {
+  const { prefix, baseResultDir } = OPTIONS[contentKind];
 
   const tempDir = path.join(TEMP_DIR, `user-${user.id}`);
   await fs.promises.mkdir(tempDir, { recursive: true });
-  const tempFileName = path.join(tempDir, `${now()}${ext}`);
 
-  const resultDir = path.join(baseResultDir, `user-${user.id}`, `${mainFilePrefix}-${now()}`);
+  const resultDir = path.join(baseResultDir, `user-${user.id}`, `${prefix}-${now()}`);
   await fs.promises.mkdir(resultDir, { recursive: true });
 
-  return { tempFileName, resultDir, tempDir };
+  return { resultDir, tempDir };
 }
 
-async function prepareThumbnail(tempFileName, resultDir, tempDir, providedThumbnail) {
-  let thumbnailInputPath = tempFileName;
-  const fromImage = !!providedThumbnail;
+async function prepareThumbnail(resultDir, tempDir, { provided, generateFrom }) {
+  const fromImage = !!provided;
+  let thumbnailInputPath = generateFrom;
 
   if (fromImage) {
-    const providedExt = path.extname(providedThumbnail.name);
+    const providedExt = path.extname(provided.name);
     const thumbnailsDir = path.join(tempDir, 'thumbnails')
     thumbnailInputPath = path.join(thumbnailsDir, `${now()}${providedExt}`);
     await fs.promises.mkdir(thumbnailsDir, { recursive: true });
-    await fs.promises.writeFile(thumbnailInputPath, providedThumbnail.data);
+    await fs.promises.writeFile(thumbnailInputPath, provided.data);
   }
 
   const thumbnailLocation = await makeThumbnail(thumbnailInputPath, resultDir, fromImage);
@@ -60,4 +59,4 @@ function makeWhereClause(wsRef) {
   return { [Op.or]: or };
 }
 
-module.exports = { prepareTempFiles, prepareThumbnail, makeWhereClause }
+module.exports = { prepareDirs, prepareThumbnail, makeWhereClause }

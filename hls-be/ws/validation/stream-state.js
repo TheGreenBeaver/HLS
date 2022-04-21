@@ -1,5 +1,5 @@
 const { ACTIONS } = require('../constants');
-const { file, strictObject, niceNumber, entityId } = require('./_validators');
+const { file, strictObject, entityId, ensureEmpty } = require('./_validators');
 const { string, object, date, boolean } = require('yup');
 
 
@@ -10,9 +10,7 @@ module.exports = {
     thumbnail: file.required(),
     plan: date().min(new Date()).optional()
   }).noUnknown(),
-  [ACTIONS.endStream]: strictObject({
-    streamedDuration: niceNumber
-  }),
+  [ACTIONS.endStream]: ensureEmpty,
   [ACTIONS.confirmPlan]: strictObject({
     willStream: boolean(),
     id: entityId

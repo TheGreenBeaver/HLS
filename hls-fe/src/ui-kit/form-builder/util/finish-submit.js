@@ -7,8 +7,8 @@ function finishSubmit(req, formikHelpers) {
     .catch(e => {
       const errorsObj = mapValues(e.payload, v => v.join('; '));
       formikHelpers.setErrors(errorsObj);
-    })
-    .finally(() => formikHelpers.setSubmitting(false));
+      formikHelpers.setSubmitting(false);
+    });
 }
 
 export default finishSubmit;

@@ -10,18 +10,20 @@ const { STREAMS_DIR, DONE_LOG_F_NAME } = require('../../settings');
 
 
 class Jobs {
-  planned = {};
+  #planned = {};
+  #wsServerRef;
+  #logsRotation;
 
   /**
    *
     * @param {ObsWebSocketServer} wsServerRef
    */
   constructor(wsServerRef) {
-    this.wsServerRef = wsServerRef;
-    this.logsRotation = this.planLogsRotation();
+    this.#wsServerRef = wsServerRef;
+    this.#logsRotation = this.#planLogsRotation();
   }
 
-  planLogsRotation() {
+  #planLogsRotation() {
     return schedule.scheduleJob('59 23 * * *', async function() {
       try {
         const allUserDirs = await fs.promises.readdir(STREAMS_DIR);
@@ -38,10 +40,10 @@ class Jobs {
   }
 
   planForUser(userId, liveStreamId, dt, fn, argsToUse) {
-    if (!this.planned[userId]) {
-      this.planned[userId] = {};
+    if (!this.#planned[userId]) {
+      this.#planned[userId] = {};
     }
-    this.planned[userId][liveStreamId] = schedule.scheduleJob(dt, async function(wsServerRef, ...args) {
+    this.#planned[userId][liveStreamId] = schedule.scheduleJob(dt, async function(wsServerRef, ...args) {
       const activeClientForUser = wsServerRef.openClients.find(c => c.userAccessLogic.user?.id === userId);
       if (
         !activeClientForUser ||
@@ -62,7 +64,7 @@ class Jobs {
       }
 
       fn.call(activeClientForUser.streamStateTracker, ...args);
-    }.bind(null, this.wsServerRef, ...argsToUse));
+    }.bind(null, this.#wsServerRef, ...argsToUse));
   }
 }
 

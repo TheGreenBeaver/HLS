@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import VideoRecorder from '../../../ui-kit/video/recorder';
 import SmartForm from '../../../ui-kit/form-builder/smart-form';
 import FileField from '../../../ui-kit/form-builder/fields/file-field';
@@ -7,23 +7,23 @@ import ACTIONS from '../../../ws/actions';
 import { FIELD_TYPES } from '../../../ui-kit/form-builder/util/validation';
 import { Photo, Upload } from '@mui/icons-material';
 import StandardTextField from '../../../ui-kit/form-builder/fields/standard-text-field';
-import { mapValues, now } from 'lodash';
 import { UNITS } from '../../../util/misc';
 import { useHistory, useLocation } from 'react-router-dom';
 import { links } from '../routing';
 import PlanPicker from './plan-picker';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import { number, shape, func } from 'prop-types';
+import { number, func } from 'prop-types';
 import CenterBox from '../../../ui-kit/layout/center-box';
 import { PLANNED_STREAM_KEY } from '../../../util/constants';
 import { Form } from 'formik';
 import fieldNames from './field-names';
 import GoButton from './go-button';
 import { useAlert } from '../../../util/hooks';
+import finishSubmit from '../../../ui-kit/form-builder/util/finish-submit';
 
 
-function PreLive({ startedAtRef, setIsLive, setLiveStreamId }) {
+function PreLive({ setIsLive, setLiveStreamId }) {
   const history = useHistory();
 
   return (
@@ -31,27 +31,20 @@ function PreLive({ startedAtRef, setIsLive, setLiveStreamId }) {
       <Typography variant='h4'>Go live</Typography>
       <SmartForm
         onSubmit={(values, formikHelpers) => {
-          startedAtRef.current = now();
           const toSend = { ...values };
           if (toSend[fieldNames.plan] == null) {
             delete toSend[fieldNames.plan];
           }
-          formikHelpers.setSubmitting(true);
-          ws
-            .request(ACTIONS.startStream, toSend)
-            .then(({ payload }) => {
+          finishSubmit(
+            ws.request(ACTIONS.startStream, toSend).then(({ payload }) => {
               if (payload.plan) {
                 history.push(links.single.get(payload.id));
               } else {
-                setIsLive(true);
                 setLiveStreamId(payload.id);
+                setIsLive(true);
               }
-            })
-            .catch(e => {
-              const errorsObj = mapValues(e.payload, v => v.join('; '));
-              formikHelpers.setErrors(errorsObj);
-              formikHelpers.setSubmitting(false);
-            });
+            }), formikHelpers
+          );
         }}
         initialValues={{
           [fieldNames.thumbnail]: null,
@@ -113,20 +106,17 @@ function PreLive({ startedAtRef, setIsLive, setLiveStreamId }) {
 }
 
 PreLive.propTypes = {
-  startedAtRef: shape({ current: number.isRequired }).isRequired,
   setIsLive: func.isRequired,
   setLiveStreamId: func.isRequired
 };
 
-function Live({ liveStreamId, startedAtRef }) {
+function Live({ liveStreamId }) {
   const showAlert = useAlert();
   const history = useHistory();
   return (
     <VideoRecorder
       onFinish={() => {
-        ws.request(ACTIONS.endStream, {
-          streamedDuration: now() - startedAtRef.current
-        }).then(() => {
+        ws.request(ACTIONS.endStream).then(() => {
           showAlert('You are not live anymore; finishing processing your stream');
           history.push(links.single.get(liveStreamId));
         });
@@ -137,7 +127,6 @@ function Live({ liveStreamId, startedAtRef }) {
 
 Live.propTypes = {
   liveStreamId: number.isRequired,
-  startedAtRef: shape({ current: number.isRequired }).isRequired
 };
 
 function GoLive() {
@@ -145,12 +134,11 @@ function GoLive() {
   const plannedStreamId = state?.[PLANNED_STREAM_KEY];
   const [isLive, setIsLive] = useState(!!plannedStreamId);
   const [liveStreamId, setLiveStreamId] = useState(plannedStreamId);
-  const startedAtRef = useRef(0);
 
   return (
     isLive
-      ? <Live liveStreamId={liveStreamId} startedAtRef={startedAtRef} />
-      : <PreLive setLiveStreamId={setLiveStreamId} startedAtRef={startedAtRef} setIsLive={setIsLive} />
+      ? <Live liveStreamId={liveStreamId} />
+      : <PreLive setLiveStreamId={setLiveStreamId} setIsLive={setIsLive} />
   );
 }
 

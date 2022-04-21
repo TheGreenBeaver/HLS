@@ -1,11 +1,10 @@
-const { NON_FIELD_ERR, TEMP_EXT } = require('../../settings');
+const { NON_FIELD_ERR } = require('../../settings');
 const log = require('../../util/logger');
 const httpStatus = require('http-status');
 const { ACTIONS, ACK_ABLE } = require('../constants');
-const { prepareTempFiles, prepareThumbnail } = require('./_video-utils');
+const { prepareDirs, prepareThumbnail } = require('./_video-utils');
 const { CONTENT_KINDS } = require('../../util/misc');
 const { serializeVideo } = require('../../serializers/videos');
-const fs = require('fs');
 const { VIDEO_BASIC } = require('../../util/query-options');
 
 /**
@@ -16,7 +15,7 @@ const { VIDEO_BASIC } = require('../../util/query-options');
  * @return {Promise<any>}
  */
 async function startStream(payload, { wsRef, respond }) {
-  const { name: videoName, description, thumbnail: providedThumbnail, plan } = payload;
+  const { name, description, thumbnail, plan } = payload;
   const theUser = wsRef.userAccessLogic.user;
   const userIsLive = wsRef.wsServerRef.openClients.some(client =>
     client.userAccessLogic.matches(theUser) && client.streamStateTracker.isLive
@@ -28,18 +27,18 @@ async function startStream(payload, { wsRef, respond }) {
     });
   }
 
-  const { tempFileName, resultDir, tempDir } = await prepareTempFiles(theUser, TEMP_EXT, CONTENT_KINDS.liveStream);
-  const thumbnailLocation = await prepareThumbnail(tempFileName, resultDir, tempDir, providedThumbnail);
+  const { resultDir, tempDir } = await prepareDirs(theUser, CONTENT_KINDS.liveStream);
+  const thumbnailLocation = await prepareThumbnail(resultDir, tempDir, { provided: thumbnail });
   const newVideo = await theUser.createVideo({
     isStream: true,
-    name: videoName,
+    name,
     thumbnail: thumbnailLocation,
     description,
     plan
   });
   await newVideo.reload({ ...VIDEO_BASIC });
 
-  await wsRef.streamStateTracker.startLiveStream(tempFileName, newVideo.id, resultDir, plan);
+  await wsRef.streamStateTracker.startLiveStream(newVideo, resultDir, plan);
 
   log(log.levels.info, `User#${theUser.id} has ${
     plan
@@ -63,7 +62,7 @@ async function endStream(payload, { wsRef, respond }) {
   await respond({ status: httpStatus.ACCEPTED });
   log(log.levels.info, `User#${theUser.id} has ended the stream`);
 
-  const dbRecord = await wsRef.streamStateTracker.finishLiveStream(payload.streamedDuration);
+  const dbRecord = await wsRef.streamStateTracker.finishLiveStream();
   log(log.levels.info, `Finished processing User#${theUser.id}'s last stream`);
 
   const subscribers = await theUser.getSubscribers();
@@ -86,10 +85,10 @@ async function endStream(payload, { wsRef, respond }) {
 async function confirmPlan(payload, { wsRef, respond }) {
   const theUser = wsRef.userAccessLogic.user;
   const { willStream, id } = payload;
-  const theStream = (await theUser.getVideos({ where: { id } }))[0];
+  const theStream = (await theUser.getVideos({ where: { id }, rejectOnEmpty: true }))[0];
   if (willStream) {
-    const { tempFileName, resultDir } = await prepareTempFiles(theUser, TEMP_EXT, CONTENT_KINDS.liveStream);
-    await wsRef.streamStateTracker.startLiveStream(tempFileName, theStream.id, resultDir);
+    const { resultDir } = await prepareDirs(theUser, CONTENT_KINDS.liveStream);
+    await wsRef.streamStateTracker.startLiveStream(theStream.id, resultDir);
     log(log.levels.info, `User#${theUser.id} has started a planned stream`);
   } else {
     const subscribers = await theUser.getSubscribers();

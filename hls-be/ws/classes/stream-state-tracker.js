@@ -1,172 +1,159 @@
-const fs = require('fs');
 const { getLiveStreamProc } = require('../../ffmpeg');
 const log = require('../../util/logger');
 const httpStatus = require('http-status');
 const { ACTIONS, ACK_ABLE } = require('../constants');
 const { VIDEO_BASIC } = require('../../util/query-options');
 const { serializeVideo } = require('../../serializers/videos');
-const { HLS_SEGMENT_DUR } = require('../../settings');
-const { Video } = require('../../models');
+const { isEmpty } = require('lodash');
 
-class StreamStateTracker {
-  static STATE = {
-    notStreaming: 'notStreaming',
-    started: 'started',
-    activating: 'activating',
-    activelyStreaming: 'activelyStreaming'
-  };
 
-  /**
-   * @type {FileHandle}
-   */
-  streamCollectorFile = null;
+class ChunksQueue {
+  #onFinish = null;
+  #writing = false;
   /**
    *
-   * @type {string | null}
+   * @type {Buffer[]}
    */
-  streamCollectorFilePath = null;
-  state = StreamStateTracker.STATE.notStreaming;
-  dbRecord = null;
+  #queue = [];
+  #inp = null;
+
+  constructor(inp) {
+    this.#inp = inp;
+  }
+
+  requestFinish(onFinish) {
+    this.#onFinish = onFinish;
+  }
+
+  #tick() {
+    if (isEmpty(this.#queue)) {
+      if (typeof this.#onFinish === 'function') {
+        this.#onFinish(() => { this.#onFinish = null; });
+      }
+      return;
+    }
+
+    if (this.#writing) {
+      return;
+    }
+
+    const nextChunk = Buffer.concat([...this.#queue]);
+    this.#queue = [];
+    this.#writing = true;
+    this.#inp.write(nextChunk, writeErr => {
+      log(log.levels.error, `Error writing to FFMPEG stdin: ${writeErr.message || writeErr.code}`);
+      this.#writing = false;
+      this.#tick();
+    });
+  }
+
+  /**
+   *
+   * @param {Buffer} chunk
+   */
+  append(chunk) {
+    this.#queue.unshift(chunk);
+    this.#tick();
+  }
+}
+
+
+class StreamStateTracker {
+  #dbRecord = null;
+  #wsRef;
+  /**
+   * @type {ChunksQueue}
+   */
+  #queue;
   /**
    * @type {ChildProcessWithoutNullStreams}
    */
   streamTransformerProc = null;
-  /**
-   *
-   * @type {string | null}
-   */
-  resultDir = null;
+  isLive = false;
 
   /**
    *
    * @param {ObsWebSocket} wsRef
    */
   constructor(wsRef) {
-    this.wsRef = wsRef;
-  }
-
-  get isLive() {
-    return this.state !== StreamStateTracker.STATE.notStreaming;
+    this.#wsRef = wsRef;
   }
 
   /**
    *
    * @param {Buffer} chunk
-   * @return {Promise<void>}
    */
-  async handleChunk(chunk) {
-    if (this.state === StreamStateTracker.STATE.notStreaming) {
-      return;
-    }
-    await this.streamCollectorFile.appendFile(chunk);
-    if (this.state === StreamStateTracker.STATE.started) {
-      this.state = StreamStateTracker.STATE.activating;
-      await this.activateLiveStream();
-      this.state = StreamStateTracker.STATE.activelyStreaming;
+  handleChunk(chunk) {
+    if (this.isLive) {
+      this.#queue.append(chunk);
     }
   }
 
-  async _pingStreamer(liveStreamId) {
-    const theStream = await Video.findByPk(liveStreamId, { ...VIDEO_BASIC });
-    return this.wsRef.sendMessage({
+  async #pingStreamer(liveStreamId) {
+    const theUser = this.#wsRef.userAccessLogic.user;
+    const theStream = (await theUser.getVideos(liveStreamId, { ...VIDEO_BASIC }))[0];
+    return this.#wsRef.sendMessage({
       action: ACTIONS.streamPlannedReminder,
       payload: serializeVideo(theStream)
     });
   }
 
-  async _start(tempFileName, liveStreamId, resultDir) {
-    const theUser = this.wsRef.userAccessLogic.user;
-    this.dbRecord = (await theUser.getVideos({ where: { id: liveStreamId }, ...VIDEO_BASIC }))[0];
-    this.streamCollectorFile = await fs.promises.open(tempFileName, 'a');
-    this.streamCollectorFilePath = tempFileName;
-    this.resultDir = resultDir;
-    this.state = StreamStateTracker.STATE.started;
-  }
-
-  async startLiveStream(tempFileName, liveStreamId, resultDir, plan) {
+  async startLiveStream(dbRecord, resultDir, plan) {
+    const theUser = this.#wsRef.userAccessLogic.user;
     if (plan) {
-      const theUser = this.wsRef.userAccessLogic.user;
-      this.wsRef.wsServerRef.jobs.planForUser(theUser.id, liveStreamId, plan, this._pingStreamer, [liveStreamId]);
-      await fs.promises.rm(tempFileName);
-    } else {
-      await this._start(tempFileName, liveStreamId, resultDir);
+      this.#wsRef.wsServerRef.jobs.planForUser(theUser.id, dbRecord.id, plan, this.#pingStreamer, [dbRecord.id]);
+      return;
     }
-  }
 
-  async activateLiveStream() {
-    const theUser = this.wsRef.userAccessLogic.user;
-    const { proc, masterFileName } = await getLiveStreamProc(this.streamCollectorFilePath, this.resultDir);
-    this.resultDir = null;
-    this.streamTransformerProc = proc;
+    this.#dbRecord = dbRecord;
 
-    this.dbRecord.location = masterFileName;
-    this.dbRecord.isLiveNow = true;
-    await this.dbRecord.save();
+    const { proc, masterFileName } = await getLiveStreamProc(resultDir);
+
+    this.#dbRecord.location = masterFileName;
+    await this.#dbRecord.save();
 
     const subscribers = await theUser.getSubscribers();
     proc.on('error', async err => {
       // TODO: Try continuing the same stream
       log(log.levels.error, `Error processing stream from User#${theUser.id}: ${err.message}`);
-      await this.finishLiveStream();
-      await this.wsRef.wsServerRef.broadcast(
+      const updatedRecord = await this.finishLiveStream();
+      await this.#wsRef.wsServerRef.broadcast(
         () => Promise.resolve({
           status: httpStatus.INTERNAL_SERVER_ERROR,
           action: ACTIONS.streamStateAck,
-          payload: { video: serializeVideo(this.dbRecord), state: ACK_ABLE.crashed }
+          payload: { video: serializeVideo(updatedRecord), state: ACK_ABLE.crashed }
         }),
-        client => Promise.resolve(client === this.wsRef || subscribers.includes(client.userAccessLogic.user))
+        client => Promise.resolve(client === this.#wsRef || subscribers.includes(client.userAccessLogic.user))
       );
     });
 
-    await this.wsRef.wsServerRef.broadcast(
+    this.#queue = new ChunksQueue(proc.stdin);
+    this.streamTransformerProc = proc;
+
+    await this.#wsRef.wsServerRef.broadcast(
       () => Promise.resolve({
         action: ACTIONS.streamStateAck, payload: { video: serializeVideo(this.dbRecord), state: ACK_ABLE.started }
       }), client => Promise.resolve(subscribers.includes(client.user))
     );
+
+    this.isLive = true;
   }
 
-  async finishLiveStream(streamedDuration) {
-    if (streamedDuration) {
-      await new Promise(resolve =>
-        this.streamTransformerProc.stderr.on('data', chunk => {
-          const chunkAsStr = chunk.toString();
-          const timeInfo = chunkAsStr.split(' ').find(info => info.startsWith('time='));
-          if (!timeInfo) {
-            return;
-          }
+  async finishLiveStream() {
+    this.#dbRecord.isLiveNow = false;
+    await this.#dbRecord.save();
 
-          const processedTimeAsStr = timeInfo.replace('time=', '');
-          const processedTime = processedTimeAsStr.split(':').reduce((dur, strTime, idx) => {
-            const numTime = +strTime;
-            const pow = 2 - idx;
-            return dur + Math.pow(60, pow) * numTime * 1000;
-          }, 0);
-          if (Math.abs(processedTime - streamedDuration) <= 1000 * HLS_SEGMENT_DUR) {
-            resolve();
-          }
-        })
-      );
-    }
+    return new Promise(resolve => {
+      this.#queue.requestFinish(cb => {
+        this.streamTransformerProc.kill();
 
-    this.streamTransformerProc.kill();
-
-    await new Promise(resolve => {
-      this.streamTransformerProc.once('close', resolve);
+        this.streamTransformerProc.once('close', () => {
+          this.isLive = false;
+          cb();
+          resolve(this.#dbRecord);
+        });
+      });
     });
-    this.streamTransformerProc = null;
-
-    await this.streamCollectorFile.close();
-    this.streamCollectorFile = null;
-
-    await fs.promises.rm(this.streamCollectorFilePath, { recursive: true });
-    this.streamCollectorFilePath = null;
-
-    this.dbRecord.isLiveNow = false;
-    await this.dbRecord.save();
-
-    this.state = StreamStateTracker.STATE.notStreaming;
-
-    return this.dbRecord;
   }
 }
 

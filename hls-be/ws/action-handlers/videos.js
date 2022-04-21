@@ -7,9 +7,10 @@ const { serializeVideo } = require('../../serializers/videos');
 const { VIDEO_BASIC, VIDEO_FULL } = require('../../util/query-options');
 const { processUploadedFile } = require('../../ffmpeg');
 const { ACTIONS } = require('../constants');
-const { prepareTempFiles, prepareThumbnail, makeWhereClause } = require('./_video-utils');
+const { prepareDirs, prepareThumbnail, makeWhereClause } = require('./_video-utils');
 const { CONTENT_KINDS } = require('../../util/misc');
 const { Op } = require('sequelize');
+const { now } = require('lodash');
 
 
 /**
@@ -28,11 +29,15 @@ async function uploadVideo(payload, { respond, wsRef }) {
   } = payload;
   const theUser = wsRef.userAccessLogic.user;
 
-  const { tempFileName, resultDir, tempDir } =
-    await prepareTempFiles(theUser, path.extname(fileName), CONTENT_KINDS.video);
+  const { resultDir, tempDir } =
+    await prepareDirs(theUser, CONTENT_KINDS.video);
+  const tempFileName = path.join(tempDir, `${now()}${path.extname(fileName)}`);
 
   await fs.promises.writeFile(tempFileName, fileRawBytes);
-  const thumbnailLocation = await prepareThumbnail(tempFileName, resultDir, tempDir, providedThumbnail);
+  const thumbnailLocation = await prepareThumbnail(resultDir, tempDir, {
+    provided: providedThumbnail,
+    generateFrom: tempFileName
+  });
   const newVideo = await theUser.createVideo(
     { name: videoName, thumbnail: thumbnailLocation, description }, { returning: ['id', 'name'] }
   );

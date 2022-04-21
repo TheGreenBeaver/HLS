@@ -18,8 +18,6 @@ const NON_FIELD_ERR = 'nonFieldErr';
 const EXPIRATION_TIME = 60 * 60 * 24 * 5; // 5 days
 const DEFAULT_PAGE_SIZE = 30;
 
-const TEMP_EXT = '.webm';
-const HLS_SEGMENT_DUR = 4;
 const LOG_F_NAME = 'ffmpeg-log.txt';
 const DONE_LOG_F_NAME = 'ffmpeg-log.done.txt';
 
@@ -41,8 +39,6 @@ module.exports = {
   EXPIRATION_TIME,
   DEFAULT_PAGE_SIZE,
 
-  TEMP_EXT,
-  HLS_SEGMENT_DUR,
   LOG_F_NAME,
   DONE_LOG_F_NAME
 };

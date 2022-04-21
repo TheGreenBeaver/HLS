@@ -21,7 +21,7 @@ function VisitButton({ onClick, to }) {
       onClick={onClick}
       component={Link}
       to={to}
-      sx={{ color: 'success.dark' }}
+      sx={{ color: 'success.contrastText' }}
     >
       Visit
     </Button>

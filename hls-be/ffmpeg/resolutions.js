@@ -1,5 +1,5 @@
 const childProcess = require('child_process');
-const { isInteger, takeRight } = require('lodash');
+const { isInteger } = require('lodash');
 
 
 const ASPECT_RATIO = { w: 16, h: 9 };
@@ -33,15 +33,16 @@ async function discoverDimensions(filePath) {
   });
 }
 
-async function getAchievableResolutions(filePath, onlyNBest) {
+async function getAchievableResolutions(filePath) {
   const [originalW, originalH] = await discoverDimensions(filePath);
-  const allAchievable = SUPPORTED_RESOLUTIONS.filter(([w, h]) => w <= originalW || h <= originalH);
-  return onlyNBest ? takeRight(allAchievable, onlyNBest) : allAchievable;
+  return SUPPORTED_RESOLUTIONS.filter(([w, h]) => w <= originalW || h <= originalH);
 }
 
 const SCALING_SETTINGS = [
   {
-    scale: (w, h) => `${w}:${h}`,
+    scale: (w, h, indefinite) => indefinite
+      ? `'min(${w},iw)':'min(${h},ih)'`
+      : `${w}:${h}`,
     force_original_aspect_ratio: 'decrease',
   },
   {
@@ -53,13 +54,13 @@ const SCALING_SETTINGS = [
   }
 ];
 
-function composeScalingArgs(w, h) {
+function composeScalingArgs(w, h, indefinite) {
   return SCALING_SETTINGS.map(settingsBlock =>
     Object.entries(settingsBlock).map(([name, valueDef]) => {
-      const value = typeof valueDef === 'function' ? valueDef(w, h) : valueDef;
+      const value = typeof valueDef === 'function' ? valueDef(w, h, indefinite) : valueDef;
       return `${name}=${value}`;
     }).join(':')
   ).join(',');
 }
 
-module.exports = { getAchievableResolutions, composeScalingArgs };
+module.exports = { getAchievableResolutions, composeScalingArgs, SUPPORTED_RESOLUTIONS };

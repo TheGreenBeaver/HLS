@@ -24,24 +24,16 @@ services:
   insight-serve-static:
     # Nginx is here!
     container_name: insight-serve-static
+    restart: unless-stopped
     env_file:
       - .env
     build:
       context: ./hls-fe
     ports:
       - "443:${EXTERNAL_HTTPS_PORT}"
+      - "80:${EXTERNAL_HTTP_PORT}"
     volumes:
       - media-volume:/usr/share/nginx/media:ro # ReadOnly access
-      - certbot-run:/var/www/certbot/:ro
-      - certbot-result:/etc/nginx/ssl/:ro
-  insight-certbot:
-    container_name: insight-certbot
-    image: certbot/certbot:v1.7.0
-    volumes:
-      - certbot-run:/var/www/certbot/:rw
-      - certbot-result:/etc/letsencrypt/:rw
 
 volumes:
   media-volume:
-  certbot-run:
-  certbot-result:

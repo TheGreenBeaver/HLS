@@ -65,7 +65,7 @@ async function sendConfirmationLink(confirmed, user, fields = CRYPTO_FIELDS) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -91,7 +91,7 @@ async function confirm(payload, { wsRef, respond }) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -111,7 +111,7 @@ async function signUp(payload, { wsRef, respond }) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -145,7 +145,7 @@ async function editUser(payload, { wsRef, respond }) {
 /**
  *
  * @param {Object} _
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -159,7 +159,7 @@ async function dropPasswordChange(_, { wsRef, respond }) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -178,7 +178,7 @@ async function resetPassword(payload, { wsRef, respond }) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -207,7 +207,7 @@ async function subscribe(payload, { wsRef, respond }) {
 /**
  *
  * @param _
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -220,7 +220,7 @@ async function listChannels(_, { wsRef, respond }) {
 /**
  *
  * @param {object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(Object): Promise<void>} respond
  * @return {Promise<void>}
  */

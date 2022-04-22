@@ -52,9 +52,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(255),
       allowNull: false,
       unique: { msg: 'This email is already in use' },
-      validate: {
-        isEmail: { msg: 'Please enter a valid email' }
-      }
     },
     password: {
       type: DataTypes.STRING(100),
@@ -80,7 +77,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     sequelize,
-    tableName: 'obs_user',
+    tableName: 'insight_user',
     modelName: 'User',
     updatedAt: false
   });

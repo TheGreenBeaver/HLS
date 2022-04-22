@@ -10,7 +10,7 @@ const { serializeUser } = require('../../serializers/users');
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(data: Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -32,7 +32,7 @@ async function me(payload, { wsRef, respond }) {
 /**
  *
  * @param _
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(data: Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -44,7 +44,7 @@ async function logOut(_, { wsRef, respond }) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(data: Object): Promise<void>} respond
  * @return {Promise<*>}
  */

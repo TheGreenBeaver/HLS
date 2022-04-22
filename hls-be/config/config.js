@@ -2,7 +2,7 @@ module.exports = {
   development: {
     username: 'postgres',
     password: 'password',
-    database: 'obs_dev',
+    database: 'insight_dev',
     host: '127.0.0.1',
     dialect: 'postgres',
     define: {
@@ -15,7 +15,7 @@ module.exports = {
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
-    host: 'hls-database',
+    host: 'insight-database',
     dialect: 'postgres',
     define: {
       underscored: true,

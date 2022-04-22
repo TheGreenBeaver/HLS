@@ -1,6 +1,6 @@
 const ENVS = {
-  dev: 'dev',
-  prod: 'prod',
+  dev: 'development',
+  prod: 'production',
 };
 
 function getVar(name, defaultVal = '') {
@@ -8,7 +8,7 @@ function getVar(name, defaultVal = '') {
 }
 
 function getEnv() {
-  return getVar('REACT_APP_ENV', ENVS.dev).toLowerCase();
+  return getVar('NODE_ENV', ENVS.dev).toLowerCase();
 }
 
 const isDev = getEnv() === ENVS.dev;

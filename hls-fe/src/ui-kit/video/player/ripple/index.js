@@ -19,7 +19,7 @@ function RippleIcon({ IconComponent, setRippleState }) {
       width={60}
       sx={{ background: theme => theme.palette.grey[800] }}
       onAnimationEnd={() => setRippleState(STATE.none)}
-      className='obs-ripple'
+      className='ist-ripple'
     >
       <IconComponent fontSize='large' sx={{ color: 'white' }} />
     </CenterBox>

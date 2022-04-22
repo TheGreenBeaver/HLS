@@ -71,7 +71,7 @@ class StreamStateTracker {
 
   /**
    *
-   * @param {ObsWebSocket} wsRef
+   * @param {IstWebSocket} wsRef
    */
   constructor(wsRef) {
     this.#wsRef = wsRef;

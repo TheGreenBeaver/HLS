@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   UserSubscription.init({}, {
     sequelize,
-    tableName: 'obs_user_subscription',
+    tableName: 'user_subscription',
     modelName: 'UserSubscription',
     timestamps: false
   });

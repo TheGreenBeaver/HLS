@@ -1,6 +1,6 @@
 const { WebSocketServer, OPEN } = require('ws');
 const { WS_PATH, PORT } = require('../../settings');
-const ObsWebSocket = require('./obs-web-socket');
+const IstWebSocket = require('./ist-web-socket');
 const log = require('../../util/logger');
 const { EVENTS } = require('../constants');
 const { isDev } = require('../../util/env');
@@ -8,12 +8,12 @@ const { getHost } = require('../../util/misc');
 const Jobs = require('./jobs');
 
 
-class ObsWebSocketServer extends WebSocketServer {
+class IstWebSocketServer extends WebSocketServer {
   constructor() {
     const args = [{
       clientTracking: true,
       path: WS_PATH,
-      WebSocket: ObsWebSocket
+      WebSocket: IstWebSocket
     }];
     if (isDev) {
       args[0].noServer = true;
@@ -34,7 +34,7 @@ class ObsWebSocketServer extends WebSocketServer {
 
   /**
    *
-   * @return {Array<ObsWebSocket>}
+   * @return {Array<IstWebSocket>}
    */
   get openClients() {
     return [...this.clients].filter(client => client.readyState === OPEN);
@@ -42,8 +42,8 @@ class ObsWebSocketServer extends WebSocketServer {
 
   /**
    *
-   * @param {function(client: ObsWebSocket): Promise<Object>} getData
-   * @param {(function(client: ObsWebSocket): Promise<boolean>)=} shouldSendToClient
+   * @param {function(client: IstWebSocket): Promise<Object>} getData
+   * @param {(function(client: IstWebSocket): Promise<boolean>)=} shouldSendToClient
    * @return {Promise<boolean>} - `true` if managed to send to all required clients
    */
   async broadcast(getData, shouldSendToClient = () => Promise.resolve(true)) {
@@ -61,4 +61,4 @@ class ObsWebSocketServer extends WebSocketServer {
   }
 }
 
-module.exports = ObsWebSocketServer;
+module.exports = IstWebSocketServer;

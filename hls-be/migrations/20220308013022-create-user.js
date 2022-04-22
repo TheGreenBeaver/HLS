@@ -2,7 +2,7 @@
 const { underscores } = require('../util/sql');
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('obs_user', underscores({
+    await queryInterface.createTable('insight_user', underscores({
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -34,6 +34,6 @@ module.exports = {
     }));
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('obs_user');
+    await queryInterface.dropTable('insight_user');
   }
 };

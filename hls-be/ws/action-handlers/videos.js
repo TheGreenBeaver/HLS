@@ -17,7 +17,7 @@ const { now } = require('lodash');
  *
  * @param {Object} payload
  * @param {function(Object): Promise<void>} respond
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @return {Promise<void>}
  */
 async function uploadVideo(payload, { respond, wsRef }) {
@@ -53,7 +53,7 @@ async function uploadVideo(payload, { respond, wsRef }) {
  *
  * @param {Object} payload
  * @param {function(Object): Promise<void>} respond
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @return {Promise<void>}
  */
 async function listVideos(payload, { respond, wsRef }) {
@@ -95,7 +95,7 @@ async function listVideos(payload, { respond, wsRef }) {
  *
  * @param {Object} payload
  * @param {function(Object): Promise<void>} respond
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @return {Promise<void>}
  */
 async function retrieveVideo(payload, { respond, wsRef }) {

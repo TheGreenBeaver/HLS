@@ -13,9 +13,9 @@ const StreamStateTracker = require('./stream-state-tracker');
 const { NON_FIELD_ERR } = require('../../settings');
 
 
-class ObsWebSocket extends WebSocket {
+class IstWebSocket extends WebSocket {
   /**
-   * @type {ObsWebSocketServer}
+   * @type {IstWebSocketServer}
    */
   wsServerRef = null;
 
@@ -127,4 +127,4 @@ class ObsWebSocket extends WebSocket {
   }
 }
 
-module.exports = ObsWebSocket;
+module.exports = IstWebSocket;

@@ -3,10 +3,10 @@
 const { getFkOperations } = require('../util/sql');
 
 
-const tokenToUser = getFkOperations('auth_token', 'obs_user', {
+const tokenToUser = getFkOperations('auth_token', 'insight_user', {
   key: 'user_id'
 });
-const videoToUser = getFkOperations('video', 'obs_user', {
+const videoToUser = getFkOperations('video', 'insight_user', {
   key: 'author_id'
 });
 

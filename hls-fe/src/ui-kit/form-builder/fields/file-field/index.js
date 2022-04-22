@@ -99,14 +99,14 @@ function EditableFile({ name, HintIcon, isImage, extraProps, PreviewComponent, l
   function onMouseEnter() {
     if (shouldHandleHint) {
       hintRef.current?.removeEventListener('animationend', hideHint);
-      hintRef.current?.classList.remove('obs-file-field-hint-out');
+      hintRef.current?.classList.remove('ist-file-field-hint-out');
       setHintVisible(true);
     }
   }
 
   function onMouseLeave() {
     hintRef.current?.addEventListener('animationend', hideHint);
-    hintRef.current?.classList.add('obs-file-field-hint-out');
+    hintRef.current?.classList.add('ist-file-field-hint-out');
   }
 
   let Insides;
@@ -158,7 +158,7 @@ function EditableFile({ name, HintIcon, isImage, extraProps, PreviewComponent, l
             hintVisible &&
             <CenterBox
               ref={hintRef}
-              className='obs-file-field-hint-in'
+              className='ist-file-field-hint-in'
               position='absolute'
               top={0}
               left={0}

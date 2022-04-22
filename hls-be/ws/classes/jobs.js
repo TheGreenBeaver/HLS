@@ -16,7 +16,7 @@ class Jobs {
 
   /**
    *
-    * @param {ObsWebSocketServer} wsServerRef
+    * @param {IstWebSocketServer} wsServerRef
    */
   constructor(wsServerRef) {
     this.#wsServerRef = wsServerRef;

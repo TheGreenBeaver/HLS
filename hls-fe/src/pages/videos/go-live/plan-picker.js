@@ -30,7 +30,7 @@ function PlanPicker() {
     }
 
     return (
-      <Box className='obs-plan-picker'>
+      <Box className='ist-plan-picker'>
         <DatePicker
           selected={value}
           onChange={dt => setValue(dt)}

@@ -1,15 +1,15 @@
 version: "3.8"
 
 services:
-  hls-database:
-    container_name: hls-database
+  insight-database:
+    container_name: insight-database
     image: postgres
     env_file:
       - .env
     ports:
       - "5432:5432"
-  hls-application:
-    container_name: hls-application
+  insight-application:
+    container_name: insight-application
     build:
       context: ./hls-be
     env_file:
@@ -18,22 +18,32 @@ services:
       - "8000:8000"
     restart: always
     links:
-      - hls-database
+      - insight-database
     depends_on:
-      - hls-database
+      - insight-database
     volumes:
-      - media-volume:/usr/src/hls-app/media
-  hls-serve-static:
-    container_name: hls-serve-static
+      - media-volume:/usr/src/insight-app/media:rw # Read + Write access
+  insight-serve-static:
+    # Nginx is here!
+    container_name: insight-serve-static
     env_file:
       - .env
     build:
       context: ./hls-fe
     ports:
-      - "80:${EXTERNAL_HTTP_PORT}"
-      - "81:${EXTERNAL_HTTPS_PORT}"
+      - "443:${EXTERNAL_HTTPS_PORT}"
     volumes:
-      - media-volume:/usr/share/nginx/media
+      - media-volume:/usr/share/nginx/media:ro # ReadOnly access
+      - certbot-run:/var/www/certbot/:ro
+      - certbot-result:/etc/nginx/ssl/:ro
+  insight-certbot:
+    container_name: insight-certbot
+    image: certbot/certbot:v1.7.0
+    volumes:
+      - certbot-run:/var/www/certbot/:rw
+      - certbot-result:/etc/letsencrypt/:rw
 
 volumes:
   media-volume:
+  certbot-run:
+  certbot-result:

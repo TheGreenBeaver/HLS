@@ -8,8 +8,8 @@ async function sendMail(content, receiver) {
 
   const user = getVar('EMAIL_USER');
   const pass = getVar('EMAIL_PASS');
-  const service = getVar('EMAIL_SERVICE', 'gmail');
-  const sender = getVar('EMAIL_SENDER', 'no-reply@in-sight.com');
+  const service = getVar('EMAIL_SERVICE');
+  const sender = getVar('EMAIL_SENDER');
 
   const transporter = nodemailer.createTransport({ service, auth: { user, pass } });
   const message = {

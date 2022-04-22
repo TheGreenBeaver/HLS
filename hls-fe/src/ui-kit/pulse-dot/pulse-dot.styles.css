@@ -10,7 +10,7 @@
   }
 }
 
-.obs-pulse-dot:before {
+.ist-pulse-dot:before {
   position: absolute;
   content: '';
   top: 0;

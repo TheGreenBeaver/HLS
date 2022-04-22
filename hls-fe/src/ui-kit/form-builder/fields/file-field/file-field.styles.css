@@ -18,10 +18,10 @@
   }
 }
 
-.obs-file-field-hint-in {
+.ist-file-field-hint-in {
   animation: fade-in 225ms forwards;
 }
 
-.obs-file-field-hint-out {
+.ist-file-field-hint-out {
   animation: fade-out 225ms forwards;
 }

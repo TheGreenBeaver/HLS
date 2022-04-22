@@ -13,7 +13,7 @@ const { serializeUser } = require('../../serializers/users');
  *
  * @param {Object} payload
  * @param {function(Object): Promise<void>} respond
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @return {Promise<void>}
  */
 async function search(payload, { respond, wsRef }) {

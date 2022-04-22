@@ -10,7 +10,7 @@ const { VIDEO_BASIC } = require('../../util/query-options');
 /**
  *
  * @param {object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(data: Object): Promise<void>} respond
  * @return {Promise<any>}
  */
@@ -52,7 +52,7 @@ async function startStream(payload, { wsRef, respond }) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(data: Object): Promise<void>} respond
  * @return {Promise<void>}
  */
@@ -78,7 +78,7 @@ async function endStream(payload, { wsRef, respond }) {
 /**
  *
  * @param {Object} payload
- * @param {ObsWebSocket} wsRef
+ * @param {IstWebSocket} wsRef
  * @param {function(data: Object): Promise<void>} respond
  * @return {Promise<void>}
  */

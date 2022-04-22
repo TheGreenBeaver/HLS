@@ -13,7 +13,7 @@ function Preloader({ size: _size, contrast }) {
       <CenterBox
         width={innerSize}
         height={innerSize}
-        className='obs-preloader'
+        className='ist-preloader'
         sx={{ '& .angle': { fill: theme => theme.palette.primary[contrast ? 'light' : 'main'] } }}
       >
         <LogoMin />

@@ -6,7 +6,7 @@ const VIDEO_DATA_SHAPE = shape({
   available: array
 });
 const AUTO_LEVEL = -1;
-const VIDEO_CONTROLS_ID = 'obs-video-controls-box';
+const VIDEO_CONTROLS_ID = 'ist-video-controls-box';
 
 const UPD_RATES = {
   currentTime: 200,

@@ -3,13 +3,13 @@
 const { getFkOperations, getUniqueOperations } = require('../util/sql');
 
 
-const tableName = 'obs_user_subscription'
+const tableName = 'user_subscription'
 
-const subscriberToSubscription = getFkOperations(tableName, 'obs_user', {
+const subscriberToSubscription = getFkOperations(tableName, 'insight_user', {
   key: 'subscriber_id',
   constraintName: 'subscription_subscriber_id_fkey'
 });
-const contentMakerToSubscription = getFkOperations(tableName, 'obs_user', {
+const contentMakerToSubscription = getFkOperations(tableName, 'insight_user', {
   key: 'content_maker_id',
   constraintName: 'subscription_content_maker_id_fkey'
 });

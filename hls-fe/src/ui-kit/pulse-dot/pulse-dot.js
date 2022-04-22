@@ -19,7 +19,7 @@ function PulseDot({ size }) {
         }
       }}
       position='relative'
-      className='obs-pulse-dot'
+      className='ist-pulse-dot'
     />
   );
 }

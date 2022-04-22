@@ -31,5 +31,5 @@ const origin = getOrigin();
 
 
 module.exports = {
-  ENVS, getVar, origin, port, isDev
+  ENVS, getVar, getEnv, origin, port, isDev
 };

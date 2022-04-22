@@ -15,14 +15,21 @@ function getEnv() {
   return getVar('NODE_ENV', ENVS.dev);
 }
 
-const isOnWindows = process.platform === 'win32';
 const isDev = getEnv() === ENVS.dev;
 
-module.exports = {
-  ENVS,
-  getVar,
-  getEnv,
+function getPort() {
+  return parseInt(getVar('INTERNAL_PORT', '8000'));
+}
 
-  isOnWindows,
-  isDev
+const port = getPort();
+
+function getOrigin() {
+  return getVar('HOST', `http://localhost:${port}`);
+}
+
+const origin = getOrigin();
+
+
+module.exports = {
+  ENVS, getVar, origin, port, isDev
 };

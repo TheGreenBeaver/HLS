@@ -4,7 +4,7 @@ const httpStatus = require('http-status');
 const { NON_FIELD_ERR } = require('../../settings');
 
 class UserAccessLogic {
-  static permissions = {
+  static #permissions = {
     [ACTIONS.startStream]: new Permission({ isAuthorized: true, isVerified: true }),
     [ACTIONS.endStream]: new Permission({ isAuthorized: true, isVerified: true }),
     [ACTIONS.streamStateAck]: new Permission({ srv: true }),
@@ -68,7 +68,7 @@ class UserAccessLogic {
   }
 
   async getIsAllowed(action) {
-    const permission = UserAccessLogic.permissions[action];
+    const permission = UserAccessLogic.#permissions[action];
     if (!permission) {
       await this.wsRef.sendMessage({
         status: httpStatus.NOT_FOUND,

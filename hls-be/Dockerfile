@@ -8,6 +8,6 @@ COPY . .
 
 RUN yarn install --production
 
-EXPOSE 8000
+EXPOSE ${INTERNAL_PORT}
 
 CMD ["yarn", "start:prod"]

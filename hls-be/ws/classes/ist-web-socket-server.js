@@ -1,10 +1,9 @@
 const { WebSocketServer, OPEN } = require('ws');
-const { WS_PATH, PORT } = require('../../settings');
+const { WS_PATH } = require('../../settings');
 const IstWebSocket = require('./ist-web-socket');
 const log = require('../../util/logger');
 const { EVENTS } = require('../constants');
-const { isDev } = require('../../util/env');
-const { getHost } = require('../../util/misc');
+const { isDev, port, origin } = require('../../util/env');
 const Jobs = require('./jobs');
 
 
@@ -18,8 +17,8 @@ class IstWebSocketServer extends WebSocketServer {
     if (isDev) {
       args[0].noServer = true;
     } else {
-      args[0].port = PORT;
-      const cb = () => log(log.levels.debug, `Server is running on ${getHost()}`);
+      args[0].port = port;
+      const cb = () => log(log.levels.debug, `Server is running on ${origin}`);
       args.push(cb);
     }
     super(...args);

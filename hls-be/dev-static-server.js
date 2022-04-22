@@ -2,12 +2,14 @@ const serveStatic = require('serve-static');
 const finalHandler = require('finalhandler');
 const httpStatus = require('http-status');
 const http = require('http');
-const { MEDIA_DIR, FE_HOSTS, MEDIA_PATH, PORT } = require('./settings');
+const { MEDIA_DIR, MEDIA_PATH } = require('./settings');
 const log = require('./util/logger');
-const { getHost } = require('./util/misc');
 const { encode } = require('./ws/transformers');
 const { EVENTS } = require('./ws/constants');
+const { port, origin } = require('./util/env');
 
+
+const FE_HOSTS = ['http://127.0.0.1:3000', 'http://localhost:3000'];
 
 function startDevStaticServer(wsServer) {
   const serveMw = serveStatic(MEDIA_DIR, {
@@ -53,7 +55,7 @@ function startDevStaticServer(wsServer) {
     }
   });
 
-  httpServer.listen(PORT, () => log(log.levels.debug, `Server is running on ${getHost()}`));
+  httpServer.listen(port, () => log(log.levels.debug, `Server is running on ${origin}`));
 }
 
 module.exports = startDevStaticServer;

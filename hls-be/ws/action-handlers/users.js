@@ -3,7 +3,7 @@ const { parseB36, checkToken, TOKEN_STATUS, hash, generateToken, getB36 } = requ
 const { capitalize } = require('lodash');
 const { NON_FIELD_ERR, AVATARS_DIR } = require('../../settings');
 const httpStatus = require('http-status');
-const { getHost } = require('../../util/misc');
+const { origin } = require('../../util/env');
 const sendMail = require('../../mail');
 const templates = require('../../mail/templates');
 const { ACTIONS, CONFIRMABLE } = require('../constants');
@@ -58,7 +58,7 @@ const CONFIRM = {
 async function sendConfirmationLink(confirmed, user, fields = CRYPTO_FIELDS) {
   const { action, subject } = CONFIRM[CONFIRMABLE.verify];
   const verificationToken = generateToken(user, fields);
-  const link = `${getHost()}/confirm/${action}/${getB36(user.id)}/${verificationToken}`;
+  const link = `${origin}/confirm/${action}/${getB36(user.id)}/${verificationToken}`;
   await sendMail({ subject, html: templates[confirmed](link) }, user.email);
 }
 

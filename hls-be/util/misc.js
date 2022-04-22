@@ -1,16 +1,12 @@
 const path = require('path');
-const { getVar } = require('./env');
-const { PORT, MEDIA_PATH, MEDIA_DIR } = require('../settings');
+const { MEDIA_PATH, MEDIA_DIR } = require('../settings');
 const { padStart } = require('lodash');
 const fs = require('fs');
+const { origin } = require('./env');
 
 
 function getFileIsUsable(file, basename) {
   return file.indexOf('.') !== 0 && file !== basename && path.extname(file) === '.js' && !file.startsWith('_');
-}
-
-function getHost() {
-  return getVar('HOST', `http://localhost:${PORT}`);
 }
 
 function composeMediaPath(file, baseDir = MEDIA_DIR, basePath = MEDIA_PATH) {
@@ -23,7 +19,7 @@ function composeMediaPath(file, baseDir = MEDIA_DIR, basePath = MEDIA_PATH) {
   }
 
   const purePath = path.relative(baseDir, file).replace(/\\/g, '/');
-  return `${getHost()}${basePath}/${purePath}`;
+  return `${origin}${basePath}/${purePath}`;
 }
 
 function completeNum(num, len = 2) {
@@ -60,6 +56,6 @@ const CONTENT_KINDS = {
 };
 
 module.exports = {
-  getFileIsUsable, getHost, composeMediaPath, formatTime, exportModule,
+  getFileIsUsable, composeMediaPath, formatTime, exportModule,
   CONTENT_KINDS
 };

@@ -1,9 +1,6 @@
 const path = require('path');
 
 
-const PORT = 8000;
-const FE_HOSTS = ['http://127.0.0.1:3000', 'http://localhost:3000'];
-
 const WS_PATH = '/ws';
 const MEDIA_PATH = '/media';
 
@@ -22,9 +19,6 @@ const LOG_F_NAME = 'ffmpeg-log.txt';
 const DONE_LOG_F_NAME = 'ffmpeg-log.done.txt';
 
 module.exports = {
-  PORT,
-  FE_HOSTS,
-
   WS_PATH,
   MEDIA_PATH,
 

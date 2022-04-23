@@ -4,7 +4,7 @@ services:
   insight-database:
     container_name: insight-database
     image: postgres
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     ports:
@@ -13,7 +13,7 @@ services:
     container_name: insight-application
     build:
       context: ./hls-be
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     links:
@@ -27,7 +27,7 @@ services:
     container_name: insight-serve-static
     build:
       context: ./hls-fe
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     ports:
@@ -35,24 +35,22 @@ services:
       - "80:${EXTERNAL_HTTP_PORT}"
     volumes:
       - media-volume:/usr/share/nginx/media:ro # ReadOnly access
-      - certbot-www:/var/www/certbot/:ro
-      - certbot-conf:/etc/nginx/ssl/:ro
-    depends_on:
-      - insight-certbot
+      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-var:/var/lib/letsencrypt:ro
+      - certbot-acme:/var/www/certbot
   insight-certbot:
+    image: certbot/certbot
     container_name: insight-certbot
-    image: certbot/certbot:v1.7.0
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "443:${EXTERNAL_HTTPS_PORT}"
-      - "80:${EXTERNAL_HTTP_PORT}"
     volumes:
-      - certbot-www:/var/www/certbot/:rw
-      - certbot-conf:/etc/letsencrypt/:rw
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-acme:/var/www/certbot
+    depends_on:
+      - insight-serve-static
+    command: certonly --webroot --webroot-path=/var/www/certbot --email $${EMAIL_USER} --agree-tos --no-eff-email -d $${HOST} -d www.$${HOST}
 
 volumes:
   media-volume:
-  certbot-www:
-  certbot-conf:
+  certbot-etc:
+  certbot-var:
+  certbot-acme:

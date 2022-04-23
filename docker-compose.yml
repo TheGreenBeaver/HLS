@@ -41,12 +41,12 @@ services:
       - insight-certbot
   insight-certbot:
     container_name: insight-certbot
-    build:
-      context: ./certbot
+    image: certbot/certbot:v1.7.0
     restart: always
     env_file:
       - .env
     ports:
+      - "443:${EXTERNAL_HTTPS_PORT}"
       - "80:${EXTERNAL_HTTP_PORT}"
     volumes:
       - certbot-www:/var/www/certbot/:rw

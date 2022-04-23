@@ -47,7 +47,7 @@ services:
       - certbot-acme:/var/www/certbot
     depends_on:
       - insight-serve-static
-    command: certonly --webroot --webroot-path=/var/www/certbot --email $${EMAIL_USER} --agree-tos --no-eff-email -d $${SRV_NAME} -d www.$${SRV_NAME}
+    command: certonly --webroot --webroot-path=/var/www/certbot --register-unsafely-without-email --agree-tos --no-eff-email -d greenbeaver-insight.duckdns.org -d www.greenbeaver-insight.duckdns.org
 
 volumes:
   media-volume:

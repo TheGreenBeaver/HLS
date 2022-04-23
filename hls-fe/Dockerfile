@@ -10,14 +10,6 @@ RUN yarn build
 
 FROM nginx
 
-ARG INTERNAL_PORT
-
-ENV INTERNAL_PORT $INTERNAL_PORT
-
-ARG SRV_NAME
-
-ENV SRV_NAME $SRV_NAME
-
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 COPY --from=fe-builder /usr/src/fe/build/ /usr/share/nginx/fe

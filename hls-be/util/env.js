@@ -25,7 +25,7 @@ const port = getPort();
 
 function getOrigin() {
   const protocol = isDev ? 'http' : 'https';
-  const host = getVar('HOST', `localhost:${port}`);
+  const host = getVar('SRV_NAME', `localhost:${port}`);
   return `${protocol}://${host}`;
 }
 

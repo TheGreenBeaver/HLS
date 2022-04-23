@@ -47,7 +47,7 @@ services:
       - certbot-acme:/var/www/certbot
     depends_on:
       - insight-serve-static
-    command: certonly --webroot --webroot-path=/var/www/certbot --email $${EMAIL_USER} --agree-tos --no-eff-email -d $${HOST} -d www.$${HOST}
+    command: certonly --webroot --webroot-path=/var/www/certbot --email $${EMAIL_USER} --agree-tos --no-eff-email -d $${SRV_NAME} -d www.$${SRV_NAME}
 
 volumes:
   media-volume:

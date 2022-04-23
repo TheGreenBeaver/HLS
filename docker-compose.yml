@@ -36,14 +36,12 @@ services:
     volumes:
       - media-volume:/usr/share/nginx/media:ro # ReadOnly access
       - certbot-etc:/etc/letsencrypt:ro
-      - certbot-var:/var/lib/letsencrypt:ro
-      - certbot-acme:/var/www/certbot:ro
+      - certbot-acme:/var/www/certbot
   insight-certbot:
     image: certbot/certbot
     container_name: insight-certbot
     volumes:
       - certbot-etc:/etc/letsencrypt:rw
-      - certbot-var:/var/lib/letsencrypt:rw
       - certbot-acme:/var/www/certbot:rw
     depends_on:
       - insight-serve-static
@@ -52,5 +50,4 @@ services:
 volumes:
   media-volume:
   certbot-etc:
-  certbot-var:
   certbot-acme:

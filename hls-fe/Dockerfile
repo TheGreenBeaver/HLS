@@ -12,4 +12,8 @@ FROM nginx
 
 COPY nginx/default.conf.template /etc/nginx/conf.d/default.conf.template
 
+EXPOSE 443
+
+EXPOSE 80
+
 COPY --from=fe-builder /usr/src/fe/build/ /usr/share/nginx/fe

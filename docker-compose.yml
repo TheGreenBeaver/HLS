@@ -30,9 +30,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      - SRV_NAME
-      - INTERNAL_PORT
     ports:
       - "443:${EXTERNAL_HTTPS_PORT}"
       - "80:${EXTERNAL_HTTP_PORT}"

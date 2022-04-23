@@ -1,0 +1,9 @@
+server {
+  server_name ${SRV_NAME} www.${SRV_NAME};
+  ssl_certificate /etc/letsencrypt/live/${SRV_NAME}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${SRV_NAME}/privkey.pem;
+
+  location /ws {
+    proxy_pass http://insight-application:${INTERNAL_PORT};
+  }
+}

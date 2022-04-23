@@ -38,7 +38,6 @@ services:
       - certbot-etc:/etc/letsencrypt:ro
       - certbot-var:/var/lib/letsencrypt:ro
       - certbot-acme:/var/www/certbot
-      - nginx-templates:/etc/nginx/templates
   insight-certbot:
     image: certbot/certbot
     container_name: insight-certbot
@@ -55,4 +54,3 @@ volumes:
   certbot-etc:
   certbot-var:
   certbot-acme:
-  nginx-templates:

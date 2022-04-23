@@ -2,6 +2,7 @@ import { Redirect, useHistory } from 'react-router-dom';
 import { links } from './routing';
 import { useUserState } from '../store/selectors';
 import PageContainer from './page-container';
+import MaintenancePage from './utility/maintenance-page';
 
 
 function getDefaultRoute({ isAuthorized, isVerified }) {
@@ -30,7 +31,7 @@ function useReturnToApp() {
   return returnToApp;
 }
 
-function withAccessControl(Component, narrow, fits) {
+function withAccessControl(Component, narrow, fits, maintenance) {
   return props => {
     const userState = useUserState();
     const history = useHistory();
@@ -47,7 +48,7 @@ function withAccessControl(Component, narrow, fits) {
 
     return (
       <PageContainer narrow={narrow}>
-        <Component {...props} />
+        {maintenance ? <MaintenancePage /> : <Component {...props} />}
       </PageContainer>
     );
   };

@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 
 async function sendMail(content, receiver) {
   if (isDev) {
-    return console.log(`TO: ${receiver}\nCONTENT: ${content}`)
+    return console.log(`TO: ${receiver}\nCONTENT: ${JSON.stringify(content)}`)
   }
 
   const user = getVar('EMAIL_USER');

@@ -8,7 +8,7 @@ RUN yarn install --production
 
 RUN yarn build
 
-FROM jonasal/nginx-certbot:3.1.2
+FROM nginx
 
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 

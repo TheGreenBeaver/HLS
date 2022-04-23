@@ -31,11 +31,12 @@ class RouteConfig {
     isAuthorized = RouteConfig.ANY,
     isVerified = RouteConfig.ANY,
     exact = true,
-    narrow = false
+    narrow = false,
+    maintenance = false
   } = {}) {
     this.path = appLink instanceof AppLink ? appLink.path : appLink;
     this.component = withAccessControl(
-      component, narrow, userState => this.fits({ isAuthorized, isVerified }, userState)
+      component, narrow, userState => this.fits({ isAuthorized, isVerified }, userState), maintenance
     );
     this.exact = exact;
   }

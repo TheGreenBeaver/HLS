@@ -1,0 +1,40 @@
+@keyframes rope-shrinking {
+  0% {
+    transform: scaleX(1);
+  }
+
+  50% {
+    transform: scaleX(0.2);
+  }
+
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes eye-hanging {
+  from {
+    transform: rotateY(0);
+  }
+
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+.ist-maintenance {
+  $animation: 5s ease-in-out infinite;
+
+  path {
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  &_rope {
+    animation: rope-shrinking $animation;
+  }
+
+  &_eye {
+    animation: eye-hanging $animation;
+  }
+}

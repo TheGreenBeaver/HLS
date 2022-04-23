@@ -21,7 +21,8 @@ const routes = [
   }),
   new RouteConfig(links.goLive, GoLive, {
     isAuthorized: true,
-    isVerified: true
+    isVerified: true,
+    maintenance: true
   })
 ];
 

@@ -24,11 +24,12 @@ function getPort() {
 const port = getPort();
 
 function getOrigin() {
-  return getVar('HOST', `http://localhost:${port}`);
+  const protocol = isDev ? 'http' : 'https';
+  const host = getVar('HOST', `localhost:${port}`);
+  return `${protocol}://${host}`;
 }
 
 const origin = getOrigin();
-
 
 module.exports = {
   ENVS, getVar, getEnv, origin, port, isDev

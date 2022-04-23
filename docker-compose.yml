@@ -4,7 +4,7 @@ services:
   insight-database:
     container_name: insight-database
     image: postgres
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env
     ports:
@@ -27,7 +27,7 @@ services:
     container_name: insight-serve-static
     build:
       context: ./hls-fe
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env
     ports:
@@ -37,14 +37,14 @@ services:
       - media-volume:/usr/share/nginx/media:ro # ReadOnly access
       - certbot-etc:/etc/letsencrypt:ro
       - certbot-var:/var/lib/letsencrypt:ro
-      - certbot-acme:/var/www/certbot
+      - certbot-acme:/var/www/certbot:ro
   insight-certbot:
     image: certbot/certbot
     container_name: insight-certbot
     volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - certbot-acme:/var/www/certbot
+      - certbot-etc:/etc/letsencrypt:rw
+      - certbot-var:/var/lib/letsencrypt:rw
+      - certbot-acme:/var/www/certbot:rw
     depends_on:
       - insight-serve-static
     command: certonly --webroot --webroot-path=/var/www/certbot --register-unsafely-without-email --agree-tos --no-eff-email -d greenbeaver-insight.duckdns.org -d www.greenbeaver-insight.duckdns.org

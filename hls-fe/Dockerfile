@@ -11,3 +11,5 @@ RUN yarn build
 FROM scratch as fe-locator
 
 COPY --from=fe-builder /usr/src/fe/build/ /usr/share/nginx/fe
+
+CMD ["echo", "Frontend built successfully!"]

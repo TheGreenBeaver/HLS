@@ -12,7 +12,8 @@ services:
   insight-application:
     container_name: insight-application
     build:
-      context: ./hls-be
+      context: .
+      dockerfile: Dockerfile.app
     restart: unless-stopped
     env_file:
       - .env
@@ -22,14 +23,6 @@ services:
       - insight-database
     volumes:
       - application-media:/usr/src/insight-app/media:rw # Read + Write access
-  insight-frontend:
-    # This one is only for building, exits after running
-    container_name: insight-frontend
-    build:
-      context: ./hls-fe
-    env_file:
-      - .env
-    volumes:
       - frontend-static:/usr/share/nginx/fe:rw
   insight-proxy:
     container_name: insight-proxy

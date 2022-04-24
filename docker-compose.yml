@@ -24,23 +24,36 @@ services:
     volumes:
       - application-media:/usr/src/insight-app/media:rw # Read + Write access
       - frontend-static:/usr/share/nginx/fe:rw
-  insight-proxy:
-    container_name: insight-proxy
+  insight-http-proxy:
+    container_name: insight-http-proxy
     build:
       context: ./proxy
+      dockerfile: Dockerfile.http
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "80:${EXTERNAL_HTTP_PORT}"
+    volumes:
+      - certbot-acme:/var/www/certbot:ro
+  insight-https-proxy:
+    container_name: insight-https-proxy
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile.https
     restart: always
     env_file:
       - .env
     ports:
       - "443:${EXTERNAL_HTTPS_PORT}"
-      - "80:${EXTERNAL_HTTP_PORT}"
     volumes:
       - certbot-etc:/etc/letsencrypt:ro
-      - certbot-acme:/var/www/certbot:ro
       - application-media:/usr/share/nginx/media:ro
       - frontend-static:/usr/share/nginx/fe:ro
     depends_on:
       - insight-application
+      - insight-http-proxy
+      - insight-certbot
   insight-certbot:
     container_name: insight-certbot
     image: certbot/certbot
@@ -50,8 +63,8 @@ services:
       - certbot-etc:/etc/letsencrypt:rw
       - certbot-acme:/var/www/certbot:rw
     depends_on:
-      - insight-proxy
-    command: certonly --webroot --webroot-path=/var/www/certbot --register-unsafely-without-email --agree-tos --no-eff-email -d "$SRV_NAME" -d www."$SRV_NAME"
+      - insight-http-proxy
+    command: certonly --webroot --webroot-path=/var/www/certbot --email="$EMAIL_USER" --agree-tos --no-eff-email -d "$SRV_NAME" -d www."$SRV_NAME"
 
 volumes:
   frontend-static:

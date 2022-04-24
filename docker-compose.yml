@@ -26,16 +26,17 @@ services:
       - frontend-static:/usr/share/nginx/fe:rw
   insight-proxy:
     container_name: insight-proxy
+    image: nginx
     restart: always
     env_file:
       - .env
     volumes:
       - application-media:/usr/share/nginx/media:ro
       - frontend-static:/usr/share/nginx/fe:ro
-      - .proxy/certbot/data:/usr/share/nginx/letsencrypt
-      - .proxy/nginx/templates:/etc/nginx/templates
-      - .proxy/dhparam:/etc/nginx/dhparam
-      - .proxy/certbot/conf/:/etc/nginx/ssl/
+      - ./proxy/certbot/data:/usr/share/nginx/letsencrypt
+      - ./proxy/nginx/templates:/etc/nginx/templates
+      - ./proxy/dhparam:/etc/nginx/dhparam
+      - ./proxy/certbot/conf/:/etc/nginx/ssl/
     ports:
       - "80:${EXTERNAL_HTTP_PORT}"
       - "443:${EXTERNAL_HTTPS_PORT}"
@@ -44,11 +45,11 @@ services:
     image: certbot/certbot:latest
     env_file:
       - .env
-    command: certonly --webroot --webroot-path=/usr/share/nginx/letsencrypt --email="$EMAIL_USER" --agree-tos --no-eff-email -d "$SRV_NAME"
+    command: certonly --webroot --webroot-path=/usr/share/nginx/letsencrypt --staging --email="$EMAIL_USER" --agree-tos --no-eff-email -d "$SRV_NAME"
     volumes:
-      - .proxy/certbot/data:/usr/share/nginx/html/letsencrypt
-      - .proxy/certbot/conf/:/etc/letsencrypt
-      - .proxy/certbot/logs/:/var/log/letsencrypt
+      - ./proxy/certbot/data:/usr/share/nginx/letsencrypt
+      - ./proxy/certbot/conf/:/etc/letsencrypt
+      - ./proxy/certbot/logs/:/var/log/letsencrypt
     depends_on:
       - insight-proxy
 

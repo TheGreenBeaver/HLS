@@ -27,3 +27,4 @@ hls-be/_temp_
 hls-be/dev-static-server.js
 
 proxy/
+.proxy/

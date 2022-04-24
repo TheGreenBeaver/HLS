@@ -28,6 +28,8 @@ COPY --from=dummy-cert-provider /etc/letsencrypt/live/${SRV_NAME}/ /etc/letsencr
 
 WORKDIR /etc/letsencrypt/live/www.${SRV_NAME}
 
+RUN true
+
 COPY --from=dummy-cert-provider /etc/letsencrypt/live/www.${SRV_NAME}/ /etc/letsencrypt/live/www.${SRV_NAME}
 
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template

@@ -40,7 +40,7 @@ services:
       - application-media:/usr/share/nginx/media:ro
       - frontend-static:/usr/share/nginx/fe:ro
     depends_on:
-      - insight-frontend
+      - insight-application
   insight-certbot:
     container_name: insight-certbot
     image: certbot/certbot

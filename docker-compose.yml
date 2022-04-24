@@ -21,12 +21,20 @@ services:
     depends_on:
       - insight-database
     volumes:
-      - media-volume:/usr/src/insight-app/media:rw # Read + Write access
-  insight-serve-static:
-    # Nginx is here!
-    container_name: insight-serve-static
+      - application-media:/usr/src/insight-app/media:rw # Read + Write access
+  insight-frontend:
+    # This one is only for building, exits after running
+    container_name: insight-frontend
     build:
       context: ./hls-fe
+    env_file:
+      - .env
+    volumes:
+      - frontend-static:/usr/share/nginx/fe:rw
+  insight-proxy:
+    container_name: insight-proxy
+    build:
+      context: ./proxy
     restart: always
     env_file:
       - .env
@@ -34,20 +42,26 @@ services:
       - "443:${EXTERNAL_HTTPS_PORT}"
       - "80:${EXTERNAL_HTTP_PORT}"
     volumes:
-      - media-volume:/usr/share/nginx/media:ro # ReadOnly access
       - certbot-etc:/etc/letsencrypt:ro
-      - certbot-acme:/var/www/certbot
+      - certbot-acme:/var/www/certbot:ro
+      - application-media:/usr/share/nginx/media:ro
+      - frontend-static:/usr/share/nginx/fe:ro
+    depends_on:
+      - insight-frontend
   insight-certbot:
-    image: certbot/certbot
     container_name: insight-certbot
+    image: certbot/certbot
+    env_file:
+      - .env
     volumes:
       - certbot-etc:/etc/letsencrypt:rw
       - certbot-acme:/var/www/certbot:rw
     depends_on:
-      - insight-serve-static
+      - insight-proxy
     command: certonly --webroot --webroot-path=/var/www/certbot --register-unsafely-without-email --agree-tos --no-eff-email -d "$SRV_NAME" -d www."$SRV_NAME"
 
 volumes:
-  media-volume:
+  frontend-static:
+  application-media:
   certbot-etc:
   certbot-acme:

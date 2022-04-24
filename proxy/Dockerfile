@@ -4,19 +4,19 @@ ARG SRV_NAME
 
 WORKDIR /etc/letsencrypt/live/$SRV_NAME
 
-RUN sh -c "openssl req -x509 -nodes -newkey rsa:4096 \
+RUN openssl req -x509 -nodes -newkey rsa:4096 \
     -days 1 \
-    -keyout '/etc/letsencrypt/live/$SRV_NAME/privkey.pem \
+    -keyout '/etc/letsencrypt/live/$SRV_NAME/privkey.pem' \
     -out '/etc/letsencrypt/live/$SRV_NAME/fullchain.pem' \
-    -subj '/CN=localhost'"
+    -subj '/CN=localhost'
 
 WORKDIR /etc/letsencrypt/live/www.$SRV_NAME
 
-RUN sh -c "openssl req -x509 -nodes -newkey rsa:4096 \
+RUN openssl req -x509 -nodes -newkey rsa:4096 \
     -days 1 \
-    -keyout '/etc/letsencrypt/live/www.$SRV_NAME/privkey.pem \
+    -keyout '/etc/letsencrypt/live/www.$SRV_NAME/privkey.pem' \
     -out '/etc/letsencrypt/live/www.$SRV_NAME/fullchain.pem' \
-    -subj '/CN=localhost'"
+    -subj '/CN=localhost'
 
 FROM nginx
 

@@ -28,6 +28,8 @@ services:
     container_name: insight-proxy
     build:
       context: ./proxy
+      args:
+        SRV_NAME: "${SRV_NAME}"
     restart: always
     env_file:
       - .env
@@ -51,6 +53,7 @@ services:
       - certbot-acme:/var/www/certbot:rw
     depends_on:
       - insight-proxy
+    command: certonly --webroot --webroot-path=/var/www/certbot --email="$EMAIL_USER" --agree-tos --no-eff-email -d "$SRV_NAME" -d www."$SRV_NAME"
 
 volumes:
   frontend-static:

@@ -5,8 +5,10 @@ map $http_upgrade $connection_upgrade {
 
 server {
   listen 443 ssl;
+  listen 80;
   # Also listen for IPv6 connections
   listen [::]:443 ssl;
+  listen [::]:80;
 
   # Hide nginx data in headers and on error pages
   server_tokens off;

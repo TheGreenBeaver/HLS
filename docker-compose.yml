@@ -38,7 +38,7 @@ services:
       - "443:${EXTERNAL_HTTPS_PORT}"
     volumes:
       - certbot-acme:/var/www/certbot:ro
-      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-etc:/etc/letsencrypt:rwrw
       - application-media:/usr/share/nginx/media:ro
       - frontend-static:/usr/share/nginx/fe:ro
     depends_on:

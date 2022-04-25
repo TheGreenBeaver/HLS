@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  insight-database:
+    container_name: insight-database
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+  insight-application:
+    container_name: insight-application
+    build:
+      context: ./app
+    restart: unless-stopped
+    env_file:
+      - .env
+    links:
+      - insight-database
+    depends_on:
+      - insight-database
+    volumes:
+      - application-media:/usr/src/insight-app/media:rw
+      - frontend-static:/usr/share/nginx/fe:rw
+  insight-proxy:
+    container_name: insight-proxy
+    build:
+      context: ./proxy
+      args:
+        PROXY_KIND: main
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - application-media:/usr/share/nginx/media:ro
+      - frontend-static:/usr/share/nginx/fe:ro
+      - ./proxy/storage/cert:/usr/share/nginx/cert:ro
+    ports:
+      - "80:${EXTERNAL_HTTP_PORT}"
+      - "443:${EXTERNAL_HTTPS_PORT}"
+
+volumes:
+  frontend-static:
+  application-media:

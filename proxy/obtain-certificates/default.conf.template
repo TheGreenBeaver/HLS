@@ -3,8 +3,8 @@ server {
   listen [::]:80;
   server_name ${SRV_NAME};
 
-  location ~ /.well-known/acme-challenge {
+  location /.well-known/acme-challenge {
     allow all;
-    root /usr/share/nginx/letsencrypt;
+    root /usr/share/nginx/acme;
   }
 }

@@ -1,8 +1,7 @@
 **/node_modules
 hls-fe/src/scripts
 **/.idea
-hls-fe/.env
-hls-be/.env
+**/.env
 **/README.md
 
 hls-fe/.pnp
@@ -25,6 +24,3 @@ hls-fe/yarn-error.log*
 hls-be/media
 hls-be/_temp_
 hls-be/dev-static-server.js
-
-proxy/
-.proxy/

@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  crtf-nginx:
+    container_name: crtf-nginx
+    build:
+      context: ./proxy
+      args:
+        PROXY_KIND: obtain-certificates
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./proxy/storage/acme:/usr/share/nginx/acme
+    ports:
+      - "80:${EXTERNAL_HTTP_PORT}"
+      - "443:${EXTERNAL_HTTPS_PORT}"
+  crtf-certbot:
+    container_name: insight-certbot
+    image: certbot/certbot:latest
+    env_file:
+      - .env
+    command: certonly --webroot --webroot-path=/usr/share/nginx/acme --staging --email="$EMAIL_USER" --agree-tos --no-eff-email -d "$SRV_NAME"
+    volumes:
+      - ./proxy/storage/acme:/usr/share/nginx/acme
+      - ./proxy/storage/cert:/usr/share/nginx/cert
+    depends_on:
+      - crtf-nginx

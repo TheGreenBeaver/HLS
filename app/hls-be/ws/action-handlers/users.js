@@ -10,7 +10,7 @@ const { ACTIONS, CONFIRMABLE } = require('../constants');
 const fs = require('fs');
 const path = require('path');
 const { serializeUser } = require('../../serializers/users');
-const { USER_PUBLIC, USER_OTHER } = require('../../util/query-options');
+const { USER_PUBLIC, USER_OTHER, userPrivateAttrs } = require('../../util/query-options');
 
 
 const CRYPTO_FIELDS = ['email', 'username'];
@@ -106,7 +106,7 @@ async function signUp(payload, { wsRef, respond }) {
   const encryptedPassword = hash(password);
   newUser.setDataValue('password', encryptedPassword);
 
-  const savedUser = await newUser.save();
+  const savedUser = await newUser.save({ returning: userPrivateAttrs });
   await sendConfirmationLink(CONFIRMABLE.verify, savedUser);
   return wsRef.userAccessLogic.logIn(savedUser, ACTIONS.signUp);
 }

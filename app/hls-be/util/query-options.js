@@ -38,6 +38,7 @@ module.exports = {
   DUMMY,
 
   USER_PUBLIC,
+  userPrivateAttrs,
   USER_PRIVATE,
   USER_OTHER,
 

@@ -1,6 +1,6 @@
 const { User } = require('../../models');
 const { parseB36, checkToken, TOKEN_STATUS, hash, generateToken, getB36 } = require('../../util/encrypt');
-const { capitalize } = require('lodash');
+const { capitalize, snakeCase } = require('lodash');
 const { NON_FIELD_ERR, AVATARS_DIR } = require('../../settings');
 const httpStatus = require('http-status');
 const { origin } = require('../../util/env');
@@ -106,7 +106,7 @@ async function signUp(payload, { wsRef, respond }) {
   const encryptedPassword = hash(password);
   newUser.setDataValue('password', encryptedPassword);
 
-  const savedUser = await newUser.save({ returning: userPrivateAttrs });
+  const savedUser = await newUser.save({ returning: userPrivateAttrs.map(attr => snakeCase(attr)) });
   await sendConfirmationLink(CONFIRMABLE.verify, savedUser);
   return wsRef.userAccessLogic.logIn(savedUser, ACTIONS.signUp);
 }

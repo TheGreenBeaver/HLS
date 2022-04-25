@@ -24,6 +24,6 @@ services:
     command: certonly --webroot --webroot-path=/usr/share/nginx/acme --staging --email="$EMAIL_USER" --agree-tos --no-eff-email -d "$SRV_NAME"
     volumes:
       - ./proxy/storage/acme:/usr/share/nginx/acme
-      - ./proxy/storage/cert:/usr/share/nginx/cert
+      - ./proxy/storage/cert:/etc/letsencrypt
     depends_on:
       - crtf-nginx

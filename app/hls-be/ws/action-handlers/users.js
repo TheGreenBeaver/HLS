@@ -78,6 +78,9 @@ async function confirm(payload, { wsRef, respond }) {
     const { applyChangesAndGetValue, field } = CONFIRM[confirmedAction];
     const value = applyChangesAndGetValue(user, wsRef);
     await user.save();
+    if (wsRef.userAccessLogic.isAuthorized && wsRef.userAccessLogic.matches(user)) {
+      await wsRef.userAccessLogic.user.reload();
+    }
     const toSend = { payload: { [field]: value } };
     return respond(toSend);
   }

@@ -7,16 +7,17 @@ services:
       context: ./proxy
       args:
         PROXY_KIND: obtain-certificates
+        EXTERNAL_HTTP_PORT: ${EXTERNAL_HTTP_PORT}
+        EXTERNAL_HTTPS_PORT: ${EXTERNAL_HTTPS_PORT}
     restart: always
     env_file:
       - .env
     volumes:
       - ./proxy/storage/acme:/usr/share/nginx/acme
     ports:
-      - "80:${EXTERNAL_HTTP_PORT}"
-      - "443:${EXTERNAL_HTTPS_PORT}"
+      - "${EXTERNAL_HTTP_PORT}:${EXTERNAL_HTTP_PORT}"
   crtf-certbot:
-    container_name: insight-certbot
+    container_name: crtf-certbot
     image: certbot/certbot:latest
     env_file:
       - .env

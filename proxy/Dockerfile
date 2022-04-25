@@ -1,7 +1,10 @@
 FROM nginx
 
 ARG PROXY_KIND
+ARG EXTERNAL_HTTP_PORT
+ARG EXTERNAL_HTTPS_PORT
 
-COPY ${PROXY_KIND}/default.conf.template /etc/nginx/templates/default.conf.template
+COPY templates/${PROXY_KIND}.conf.template /etc/nginx/templates/default.conf.template
 
-EXPOSE 443
+EXPOSE ${EXTERNAL_HTTP_PORT}
+EXPOSE ${EXTERNAL_HTTPS_PORT}

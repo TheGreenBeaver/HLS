@@ -7,6 +7,12 @@ function useWsCleanup() {
   useEffect(() => () => ws.close(), []);
 }
 
+/**
+ *
+ * @param {string} actionName
+ * @param {function(payload: Object, status: number)} handler
+ * @param {*[]} deps
+ */
 function useWsAction(actionName, handler, deps = []) {
   useEffect(() => {
     const unsubscribe = ws.subscribe(actionName, handler);

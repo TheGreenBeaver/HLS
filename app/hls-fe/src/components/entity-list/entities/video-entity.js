@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import PulseDot from '../../../ui-kit/pulse-dot';
 import Grid from '@mui/material/Grid';
 import { DateTime } from 'luxon';
+import { STANDARD_RATIO } from '../../../util/constants';
 
 
 function getTimingText({ isLiveNow, plan, createdAt, location, isStream }) {
@@ -26,8 +27,37 @@ function VideoEntity({ data, large }) {
   const gridProps = large ? { xs: 12 } : { xs: 2, sm: 4, lg: 3 };
   const imgProps = large ? { height: 220, width: 'auto' } : { height: 'auto', width: '100%' };
   const boxProps = large ? { display: 'flex', columnGap: 2 } : { display: 'block' };
+  const linkToAuthorPos = large ? {
+    top: theme => ({
+      xs: `calc(1rem * 1.5 + ${theme.spacing(2.5)})`,
+      md: `calc(1rem * 1.5 + ${theme.spacing(3.5)})`,
+    }),
+    left: theme => ({
+      xs: imgProps.height * STANDARD_RATIO.w / STANDARD_RATIO.h + parseInt(theme.spacing(5)) + 40,
+      md: imgProps.height * STANDARD_RATIO.w / STANDARD_RATIO.h + parseInt(theme.spacing(6)) + 40
+    })
+  } : {
+    bottom: 'calc(0.75rem * 1.2)',
+    left: theme => ({
+      xs: parseInt(theme.spacing(3)) + 40,
+      md: parseInt(theme.spacing(4)) + 40
+    })
+  };
   return (
-    <Grid item {...gridProps}>
+    <Grid item {...gridProps} position='relative'>
+      <Typography
+        color='text.secondary'
+        variant='caption'
+        lineHeight={1.2}
+        position='absolute'
+        component={Link}
+        to={links.channels.single.get(data.author.id)}
+        sx={{ ...linkToAuthorPos, '&:hover, &:focus': { textDecoration: 'underline' } }}
+        onClick={e => e.stopPropagation()}
+      >
+        {data.author.username}
+      </Typography>
+
       <Box component={Link} to={links.videos.single.get(data.id)} {...boxProps}>
         <img src={data.thumbnail} alt={data.name} {...imgProps} />
         <Box display='flex' columnGap={1}>
@@ -38,9 +68,7 @@ function VideoEntity({ data, large }) {
             <Typography color='text.primary'>
               {data.name}
             </Typography>
-            <Typography color='text.secondary' variant='caption' display='block' lineHeight={1.2}>
-              {data.author.username}
-            </Typography>
+            <Box height='calc(0.75rem * 1.2)' />
             <Box display='flex' alignItems='center' columnGap={1}>
               {data.isLiveNow && <PulseDot />}
               <Typography color='text.secondary' variant='caption' display='block' lineHeight={1.2}>

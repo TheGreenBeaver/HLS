@@ -8,6 +8,6 @@ html {
   font-size: 14px;
 }
 
-a {
-  text-decoration: none !important;
+a, a:hover, a:active, a:focus {
+  text-decoration: none;
 }

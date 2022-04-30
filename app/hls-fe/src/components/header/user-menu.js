@@ -51,7 +51,12 @@ function UserMenu() {
         {
           userData &&
           [
-            <MenuItem key='username'>
+            <MenuItem
+              key='username'
+              component={Link}
+              to={links.channels.single.get(userData.id)}
+              onClick={closeMenu}
+            >
               {userData.username}
             </MenuItem>,
             <Divider key='divider' />

@@ -8,16 +8,19 @@ function serializeVideo(video) {
     createdAt = video.location ? video.plan : null;
   }
 
-  return {
+  const result = {
     ...video.dataValues,
-    author: {
-      ...video.author.dataValues,
-      avatar: composeMediaPath(video.author.avatar)
-    },
     location: composeMediaPath(video.location),
     thumbnail: composeMediaPath(video.thumbnail),
     createdAt
   };
+  if (video.author) {
+    result.author = {
+      ...video.author.dataValues,
+      avatar: composeMediaPath(video.author.avatar)
+    };
+  }
+  return result;
 }
 
 module.exports = {

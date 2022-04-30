@@ -46,7 +46,11 @@ async function uploadVideo(payload, { respond, wsRef }) {
   newVideo.location = await processUploadedFile(tempFileName, resultDir);
   await newVideo.save();
 
-  return wsRef.sendMessage({ status: httpStatus.CREATED, payload: newVideo, action: ACTIONS.videoProcessedAck });
+  return wsRef.sendMessage({
+    status: httpStatus.CREATED,
+    payload: serializeVideo(newVideo),
+    action: ACTIONS.videoProcessedAck
+  });
 }
 
 /**
@@ -78,7 +82,7 @@ async function listVideos(payload, { respond, wsRef }) {
       where.author_id = filters.author;
     }
     if ('q' in filters) {
-      const like = { [Op.like]: `%${filters.q}%` };
+      const like = { [Op.iLike]: `%${filters.q}%` };
       searchRestriction = { [Op.or]: [{ name: like }, { description: like }] };
     }
   }

@@ -9,7 +9,11 @@ function VideosList() {
   return (
     <>
       <SearchBar section={SECTIONS.search} />
-      <EntityList Entity={VideoEntity} actionName={ACTIONS.listVideos} />
+      <EntityList
+        Entity={VideoEntity}
+        actionName={ACTIONS.listVideos}
+        filterByAuth={(v, isAuthorized) => isAuthorized || !!v.location}
+      />
     </>
   );
 }

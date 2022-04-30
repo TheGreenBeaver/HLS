@@ -5,7 +5,8 @@ const { last } = require('lodash');
 
 
 const THUMBNAIL_FRAME = 1;
-const THUMBNAIL_NAME = 'thumbnail.png';
+const THUMBNAIL_NAME = 'thumbnail';
+const DEFAULT_THUMBNAIL_EXT = '.png';
 
 async function getBestResolution(inputPath) {
   const achievableResolutions = await getAchievableResolutions(inputPath);
@@ -32,7 +33,8 @@ async function composeCommand(output, inputPath, extra) {
  */
 async function makeThumbnail(inputPath, outputDir, fromImage) {
   const extra = fromImage ? null : `-vf "select=eq(n\\,${THUMBNAIL_FRAME})" -vframes 1`;
-  const output = path.join(outputDir, THUMBNAIL_NAME);
+  const outputExt = fromImage ? path.extname(inputPath) : DEFAULT_THUMBNAIL_EXT;
+  const output = path.join(outputDir, `${THUMBNAIL_NAME}${outputExt}`);
   const command = await composeCommand(output, inputPath, extra);
   return new Promise((resolve, reject) =>
     childProcess.exec(command, error => error ? reject(error) : resolve(output))

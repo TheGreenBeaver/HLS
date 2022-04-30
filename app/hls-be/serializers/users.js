@@ -12,7 +12,7 @@ function serializeUser(user, currentUser) {
   if ('subscribers' in user) {
     serialized.subscribersAmount = user.subscribers.length;
     if (currentUser) {
-      serialized.isSubscribed = user.subscribers.includes(currentUser.id);
+      serialized.isSubscribed = user.subscribers.some(u => u.id === currentUser.id);
     }
   }
 

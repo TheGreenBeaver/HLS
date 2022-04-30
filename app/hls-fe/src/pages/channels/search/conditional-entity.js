@@ -22,3 +22,4 @@ ConditionalEntity.propTypes = {
 };
 
 export default ConditionalEntity;
+export { KINDS };

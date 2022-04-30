@@ -44,11 +44,16 @@ function SingleChannel() {
         {
           currentUserData && currentUserData.id !== userData.id && !userData.isSubscribed &&
           <Button
+            sx={{ height: 'fit-content', mt: 1 }}
             variant='outlined'
             onClick={() =>
               ws
                 .request(ACTIONS.subscribe, { id: +id })
-                .then(() => setData(curr => ({ ...curr, isSubscribed: true })))
+                .then(() => setData(curr => ({
+                  ...curr,
+                  isSubscribed: true,
+                  subscribersAmount: curr.subscribersAmount + 1
+                })))
             }
           >
             Subscribe
@@ -66,6 +71,7 @@ function SingleChannel() {
           }
           return p;
         }}
+        filterByAuth={(v, isAuthorized) => isAuthorized || !!v.location}
       />
     </>
   );

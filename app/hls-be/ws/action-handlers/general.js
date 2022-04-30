@@ -19,7 +19,7 @@ const { serializeUser } = require('../../serializers/users');
 async function search(payload, { respond, wsRef }) {
   const { q, page, pageSize: _pageSize, searchFor } = payload;
   const pageSize = _pageSize || DEFAULT_PAGE_SIZE;
-  const like = { [Op.like]: `%${q}%` };
+  const like = { [Op.iLike]: `%${q}%` };
 
   const allResults = [];
 

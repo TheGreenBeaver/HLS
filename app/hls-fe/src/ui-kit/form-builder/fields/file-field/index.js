@@ -224,6 +224,7 @@ function EditableFile({ name, HintIcon, isImage, extraProps, PreviewComponent, l
         isEditing && hasValue &&
         <Box display='flex' justifyContent='flex-end' mt={0.5}>
           <Button
+            disabled={!canBeUsed}
             startIcon={<Delete />}
             onClick={() => {
               setVal(null);

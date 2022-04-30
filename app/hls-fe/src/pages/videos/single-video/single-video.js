@@ -1,6 +1,6 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { useWsRequest } from '../../../ws/hooks';
+import { Link, useParams } from 'react-router-dom';
+import { useWsAction, useWsRequest } from '../../../ws/hooks';
 import ACTIONS from '../../../ws/actions';
 import VideoPlayer from '../../../ui-kit/video/player';
 import Typography from '@mui/material/Typography';
@@ -11,17 +11,24 @@ import Preloader from '../../../ui-kit/preloader';
 import { CenterBox } from '../../../ui-kit/layout';
 import PulseDot from '../../../ui-kit/pulse-dot';
 import Avatar from '@mui/material/Avatar';
+import { links } from '../../routing';
 
 
 function SingleVideo() {
   const { id } = useParams();
 
-  const { isFetching, data } = useWsRequest(ACTIONS.retrieveVideo, {
+  const { isFetching, data, setData } = useWsRequest(ACTIONS.retrieveVideo, {
     getPayload: currId => ({ id: +currId }),
     condition: !!id,
     deps: [id],
     initialData: null
   });
+
+  useWsAction(ACTIONS.videoProcessedAck, payload => {
+    if (payload.id === +id) {
+      setData(curr => ({ ...curr, location: payload.location }));
+    }
+  }, [id]);
 
   if (isFetching) {
     return (
@@ -82,11 +89,19 @@ function SingleVideo() {
         </Box>
       }
       <Divider sx={{ my: 1 }} />
-      <Box display='flex' alignItems='center' columnGap={1}>
+      <Box
+        display='flex'
+        alignItems='center'
+        columnGap={1}
+        component={Link}
+        to={links.channels.single.get(data.author.id)}
+        sx={{ '&:hover .MuiTypography-root': { textDecoration: 'underline' } }}
+        width='fit-content'
+      >
         <Avatar src={data.author.avatar}>
           {data.author.username[0]}
         </Avatar>
-        <Typography variant='subtitle1'>{data.author.username}</Typography>
+        <Typography variant='subtitle1' color='text.primary'>{data.author.username}</Typography>
       </Box>
       <Typography mt={1} color={data.description ? 'text.primary' : 'text.secondary'}>
         {data.description || 'No description provided'}

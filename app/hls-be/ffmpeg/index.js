@@ -50,11 +50,16 @@ async function processUploadedFile(originalFileName, videoDir) {
   const { args, masterFileName } = await composeArgs(videoDir, CONTENT_KINDS.video, originalFileName);
   const fullArgs = `ffmpeg ${args.join(' ')}`;
 
+  let output;
   try {
     await new Promise((resolve, reject) =>
-      childProcess.exec(fullArgs, error => error ? reject(error): resolve())
+      childProcess.exec(fullArgs, (error, _, stderr) => {
+        output = stderr;
+        return error ? reject(error): resolve();
+      })
     );
   } finally {
+    await fs.promises.writeFile(path.join(videoDir, DONE_LOG_F_NAME), output);
     await fs.promises.rm(originalFileName);
   }
 

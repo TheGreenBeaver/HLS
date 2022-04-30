@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { elementType, func, number, oneOf } from 'prop-types';
 import ACTIONS from '../../ws/actions';
 import Grid from '@mui/material/Grid';
@@ -9,14 +9,16 @@ import queryString from 'query-string';
 import { Q } from '../../util/constants';
 import Typography from '@mui/material/Typography';
 import InfiniteScroll from '../../ui-kit/infinite-scroll';
+import { useUserState } from '../../store/selectors';
 
 
 function defaultComposePayload(q) {
   return q ? { [Q]: q } : {};
 }
 
-function EntityList({ Entity, actionName, composePayload, pageSize }) {
+function EntityList({ Entity, actionName, composePayload, pageSize, filterByAuth }) {
   const { search } = useLocation();
+  const { isAuthorized } = useUserState();
   const [hasMore, setHasMore] = useState(true);
   const [entities, setEntities] = useMountedState([]);
   const [isFetching, setIsFetching] = useState(false);
@@ -25,6 +27,10 @@ function EntityList({ Entity, actionName, composePayload, pageSize }) {
     setHasMore(true);
     setEntities([]);
   }, [search]);
+
+  useEffect(() => {
+    setEntities(curr => curr.filter(entity => filterByAuth(entity, isAuthorized)));
+  }, [isAuthorized]);
 
   function loadMore(page, force) {
     if (isFetching || (!hasMore && !force)) {
@@ -63,7 +69,8 @@ EntityList.propTypes = {
   Entity: elementType.isRequired,
   actionName: oneOf([...Object.values(ACTIONS)]).isRequired,
   pageSize: number,
-  composePayload: func
+  composePayload: func,
+  filterByAuth: func
 };
 
 EntityList.defaultProps = {

@@ -104,8 +104,10 @@ async function listVideos(payload, { respond, wsRef }) {
  */
 async function retrieveVideo(payload, { respond, wsRef }) {
   const { id } = payload;
-  const where = makeWhereClause(wsRef);
-  const theVideo = await Video.findByPk(id, { where, ...VIDEO_FULL, rejectOnEmpty: true });
+  const restrictions = makeWhereClause(wsRef);
+  const where = { ...restrictions, id };
+  const matchingVideos = await Video.findAll({ where, ...VIDEO_FULL, rejectOnEmpty: true });
+  const theVideo = matchingVideos[0];
   return respond({ payload: serializeVideo(theVideo) });
 }
 

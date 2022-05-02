@@ -6,7 +6,7 @@ const httpStatus = require('http-status');
 const { serializeVideo } = require('../../serializers/videos');
 const fs = require('fs');
 const path = require('path');
-const { STREAMS_DIR, DONE_LOG_F_NAME } = require('../../settings');
+const { STREAMS_DIR, DONE_LOG_F_NAME, VIDEOS_DIR } = require('../../settings');
 
 
 class Jobs {
@@ -25,17 +25,19 @@ class Jobs {
 
   #planLogsRotation() {
     return schedule.scheduleJob('59 23 * * *', async function() {
-      try {
-        const allUserDirs = await fs.promises.readdir(STREAMS_DIR);
-        for (const userDir of allUserDirs) {
-          const allStreamDirs = await fs.promises.readdir(userDir);
-          for (const streamDir of allStreamDirs) {
-            try {
-              await fs.promises.rm(path.join(streamDir, DONE_LOG_F_NAME));
-            } catch {}
+      for (const dir of [STREAMS_DIR, VIDEOS_DIR]) {
+        try {
+          const allUserDirs = await fs.promises.readdir(dir);
+          for (const userDir of allUserDirs) {
+            const allContentDirs = await fs.promises.readdir(userDir);
+            for (const contentDir of allContentDirs) {
+              try {
+                await fs.promises.rm(path.join(contentDir, DONE_LOG_F_NAME), { recursive: true, force: true });
+              } catch {}
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      }
     });
   }
 

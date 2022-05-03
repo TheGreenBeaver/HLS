@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  insight-database:
+    container_name: insight-database
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+  insight-application:
+    container_name: insight-application
+    build:
+      context: ./app
+    restart: unless-stopped
+    env_file:
+      - .env
+    links:
+      - insight-database
+    depends_on:
+      - insight-database
+    volumes:
+      - ./volumes-mnt/application-media:/usr/src/insight-app/media:rw
+      - ./volumes-mnt/frontend-static:/usr/share/nginx/fe:rw
+  insight-proxy:
+    container_name: insight-proxy
+    expose:
+      - "${EXTERNAL_HTTP_PORT}"
+      - "${EXTERNAL_HTTPS_PORT}"
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./volumes-mnt/application-media:/usr/share/nginx/media:ro
+      - ./volumes-mnt/frontend-static:/usr/share/nginx/fe:ro
+      - ./volumes-mnt/proxy/cert:/usr/share/nginx/cert:ro
+      - ./volumes-mnt/proxy/acme:/usr/share/nginx/acme
+      - ./volumes-mnt/proxy/templates:/etc/nginx/templates
+    ports:
+      - "${EXTERNAL_HTTP_PORT}:${EXTERNAL_HTTP_PORT}"
+      - "${EXTERNAL_HTTPS_PORT}:${EXTERNAL_HTTPS_PORT}"
+  insight-certbot:
+    container_name: insight-certbot
+    image: certbot/certbot:latest
+    env_file:
+      - .env
+    command: certonly --webroot --webroot-path=/usr/share/nginx/acme --email="$EMAIL_USER" --agree-tos --no-eff-email -d "$SRV_NAME"
+    volumes:
+      - ./volumes-mnt/proxy/acme:/usr/share/nginx/acme
+      - ./volumes-mnt/proxy/cert:/etc/letsencrypt
+    depends_on:
+      - insight-proxy
+
+volumes:
+  frontend-static:
+  application-media:

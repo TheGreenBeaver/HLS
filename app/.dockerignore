@@ -1,22 +1,14 @@
 **/node_modules
-hls-fe/src/scripts
 **/.idea
 **/.env
 **/README.md
 
+hls-fe/src/scripts
 hls-fe/.pnp
 hls-fe/.pnp.js
-
 hls-fe/coverage
-
 hls-fe/build
-
 hls-fe/.DS_Store
-hls-fe/.env.local
-hls-fe/.env.development.local
-hls-fe/.env.test.local
-hls-fe/.env.production.local
-
 hls-fe/npm-debug.log*
 hls-fe/yarn-debug.log*
 hls-fe/yarn-error.log*
